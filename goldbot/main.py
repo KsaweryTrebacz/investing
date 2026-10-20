@@ -10,6 +10,7 @@ import sys
 
 import pandas as pd
 
+from guards import DataError, validate_candles
 from macro import USD_SERIES, YIELD_SERIES, fetch_series
 from oanda import Oanda, demo_candles, demo_daily, demo_macro
 
@@ -29,19 +30,44 @@ def get_inputs(demo: bool, n_m15: int, n_d1: int):
         d1 = demo_daily(m15)
         print("UWAGA: dane syntetyczne. Wyniki nie mówią nic o strategii ani o rynku.")
         return (m15, d1, *demo_macro(d1))
-    api = Oanda()
-    m15, d1 = api.candles(INSTR, "M15", n_m15), api.candles(INSTR, "D", n_d1)
-    usd = yld = None
+    api = make_source()
+    try:
+        m15, d1 = api.candles(INSTR, "M15", n_m15), api.candles(INSTR, "D", n_d1)
+    finally:
+        getattr(api, "close", lambda: None)()
+    return m15, d1, *get_macro()
+
+
+def make_source():
+    """Źródło świec z GOLDBOT_SOURCE: oanda (API v20) albo mt5 (terminal MetaTrader 5)."""
+    name = os.environ.get("GOLDBOT_SOURCE", "oanda").strip().lower()
+    if name == "mt5":
+        from mt5_source import MT5Source
+        return MT5Source()
+    if name == "oanda":
+        return Oanda()
+    raise SystemExit(f"Nieznane GOLDBOT_SOURCE='{name}'. Dozwolone: oanda, mt5.")
+
+
+def get_macro():
+    """(usd, yld) z FRED albo (None, None). Nieaktualne dane makro są traktowane jak brak."""
+    from guards import macro_is_stale
+
     key = os.environ.get("FRED_API_KEY")
     if not key:
         print("Ostrzeżenie: brak FRED_API_KEY, reżim dzienny będzie NEUTRALNY (brak danych makro).")
-    else:
-        try:
-            usd, yld = fetch_series(USD_SERIES, key), fetch_series(YIELD_SERIES, key)
-        except Exception as e:
-            usd = yld = None
-            print(f"Ostrzeżenie: nie pobrano danych makro ({e}), reżim będzie NEUTRALNY.")
-    return m15, d1, usd, yld
+        return None, None
+    try:
+        usd, yld = fetch_series(USD_SERIES, key), fetch_series(YIELD_SERIES, key)
+    except Exception as e:
+        print(f"Ostrzeżenie: nie pobrano danych makro ({e}), reżim będzie NEUTRALNY.")
+        return None, None
+    now = pd.Timestamp.now(tz="UTC")
+    for name, s in (("dolar", usd), ("rentowności", yld)):
+        if s.empty or macro_is_stale(s, now):
+            print(f"Ostrzeżenie: dane makro ({name}) są nieaktualne, reżim będzie NEUTRALNY.")
+            return None, None
+    return usd, yld
 
 
 def cmd_cycle(args):
@@ -57,9 +83,15 @@ def cmd_cycle(args):
     send = telegram_sender()
     if send is None:
         print("Telegram nieskonfigurowany (TELEGRAM_BOT_TOKEN, TELEGRAM_CHAT_ID), bez powiadomień.")
+    now = None
     if args.demo:
         send = None  # dane syntetyczne nigdy nie trafiają na Telegram
-    res = run_cycle(m15, d1, usd, yld, Store(db_path(args.demo)), send)
+        now = m15["time"].iloc[-1] + pd.Timedelta(minutes=16)  # demo ma własny zegar
+    try:
+        res = run_cycle(m15, d1, usd, yld, Store(db_path(args.demo)), send, now=now)
+    except DataError as e:
+        print(f"Dane odrzucone, werdykt nie został wydany: {e}")
+        return 1
     v = res["verdict"]
     print(f"{v['time']}  {v['verdict']}  reżim={v['regime']}  zapisano={res['stored']}  "
           f"rozstrzygnięto={res['resolved']}")
@@ -83,6 +115,12 @@ def cmd_validate(args):
         m15, d1, usd, yld = get_inputs(args.demo, int(args.years * 24000), int(args.years * 365 + 300))
     except Exception as e:
         print(f"Błąd pobierania danych: {e}")
+        return 1
+    try:
+        validate_candles(m15, "M15", 1000)
+        validate_candles(d1, "D1", 200)
+    except DataError as e:
+        print(f"Dane odrzucone: {e}")
         return 1
     df = prepare(m15, d1, usd, yld)
     res = walk_forward(df, split=args.split)

@@ -15,6 +15,15 @@ Rady lądują w SQLite (`goldbot/goldbot.db`). Otwarte rady są potem rozliczane
 
 Telegram dostaje wiadomość przy nowym KUP/SPRZEDAJ albo przy zmianie reżimu.
 
+## Zabezpieczenia
+
+- Dane są sprawdzane przed liczeniem: za mało świec, brakujące lub niedodatnie ceny, ask < bid, high < low, czas, który się cofa albo powtarza. Wtedy cykl kończy się błędem i nic nie zapisuje.
+- Jeśli ostatnia zamknięta świeca M15 jest starsza niż 30 minut, rada handlowa zamienia się w CZEKAJ, a uzasadnienie mówi, że dane są nieaktualne.
+- Dopóki poprzednia rada KUP/SPRZEDAJ jest otwarta, nowej nie ma.
+- Gdy rady rozliczone danego dnia (UTC) dały łącznie -2R lub gorzej, nowe rady handlowe są wstrzymane do końca dnia.
+- Dane z FRED starsze niż 10 dni są traktowane jak brak, więc reżim jest neutralny.
+- W kodzie nie ma niczego, co składa zlecenia. Pilnuje tego test.
+
 ## Instalacja
 
 Python 3.12.
@@ -27,13 +36,34 @@ python -m pip install -r requirements-dev.txt
 Zmienne środowiskowe (najlepiej jako zmienne użytkownika Windows):
 
 ```
-OANDA_TOKEN          token z konta OANDA Practice
+GOLDBOT_SOURCE       oanda (domyślnie) albo mt5
 FRED_API_KEY         darmowy klucz z fred.stlouisfed.org
 TELEGRAM_BOT_TOKEN   token bota od @BotFather (opcjonalnie)
 TELEGRAM_CHAT_ID     id czatu z botem (opcjonalnie)
 ```
 
-Obsługiwane jest tylko konto Practice.
+### Źródło danych: OANDA API v20
+
+```
+OANDA_TOKEN          token z konta OANDA Practice
+```
+
+Obsługiwane jest tylko konto Practice. Według dokumentacji OANDA, API v20 nie działa dla klientów OANDA TMS Brokers (Polska). Wtedy trzeba użyć MT5.
+
+### Źródło danych: MetaTrader 5 (np. OANDA TMS)
+
+```
+GOLDBOT_SOURCE=mt5
+MT5_SERVER_OFFSET_HOURS   przesunięcie czasu serwera MT5 względem UTC, np. 2 zimą, 3 latem
+MT5_GOLD_SYMBOL           nazwa złota u brokera, domyślnie XAUUSD
+MT5_TERMINAL_PATH         ścieżka do terminal64.exe (opcjonalnie)
+```
+
+- Terminal MT5 musi być uruchomiony i zalogowany ręcznie, najlepiej na rachunek demo. Program tylko się podłącza i nie potrzebuje hasła.
+- Symbol złota musi być w oknie Obserwacja rynku (Ctrl+U). Przy złej nazwie program podpowie podobne.
+- Przesunięcie czasu sprawdzisz, porównując godzinę serwera w oknie Obserwacja rynku z UTC. Przy zmianie czasu letni/zimowy trzeba je poprawić. Zła wartość daje błąd o świecach z przyszłości albo blokadę nieaktualnych danych.
+- MT5 podaje ceny świec po BID i spread świecy w punktach. Ask liczony jest jako BID + spread.
+- Do `validate --years 3` potrzeba około 72 000 świec M15. W MT5 ustaw *Narzędzia, Opcje, Wykresy, Maks. słupków na wykresie* na co najmniej tyle i przewiń wykres M15 złota wstecz, żeby terminal pobrał historię.
 
 ## Użycie
 
@@ -78,6 +108,8 @@ goldbot/
   backtest.py     backtest
   validate.py     podział na okres do strojenia i kontrolny
   oanda.py        pobieranie świec z OANDA + dane demo
+  mt5_source.py   pobieranie świec z terminala MT5
+  guards.py       zabezpieczenia
   macro.py        dane z FRED
   notify.py       Telegram
   store.py        SQLite

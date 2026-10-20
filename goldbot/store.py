@@ -72,6 +72,12 @@ class Store:
             self.db.execute("UPDATE verdicts SET status=?, outcome_r=?, resolved_time=? WHERE id=?",
                             (status, float(outcome_r), resolved_time, vid))
 
+    def realized_r_since(self, since_iso: str) -> float:
+        """Suma R rad rozliczonych od `since_iso` (czas rozliczenia)."""
+        r = self.db.execute("SELECT COALESCE(SUM(outcome_r), 0) FROM verdicts "
+                            "WHERE status IN ('TP','SL','EXPIRED') AND resolved_time >= ?", (since_iso,))
+        return float(r.fetchone()[0])
+
     def stats(self) -> dict:
         r = np.array([x[0] for x in self.db.execute(
             "SELECT outcome_r FROM verdicts WHERE status IN ('TP','SL','EXPIRED') ORDER BY time")])
