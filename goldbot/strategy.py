@@ -4,6 +4,7 @@ from dataclasses import dataclass
 import pandas as pd
 
 from indicators import atr, ema, macd_hist, rsi
+from regime import REGIME_BUY, REGIME_SELL
 
 
 @dataclass
@@ -47,4 +48,14 @@ def add_signals(df: pd.DataFrame, p: Params = Params()) -> pd.DataFrame:
     out.loc[long_, "signal"] = 1
     out.loc[short_, "signal"] = -1
     out.iloc[: p.ema_len, out.columns.get_loc("signal")] = 0  # rozgrzewka EMA200
+    return out
+
+
+def gate_by_regime(df: pd.DataFrame) -> pd.DataFrame:
+    """LONG tylko w reżimie kupna, SHORT tylko w reżimie sprzedaży. Surowy sygnał zostaje w signal_raw."""
+    out = df.copy()
+    out["signal_raw"] = out["signal"]
+    ok = ((out["signal"] == 1) & (out["regime"] == REGIME_BUY)) | \
+         ((out["signal"] == -1) & (out["regime"] == REGIME_SELL))
+    out["signal"] = out["signal"].where(ok, 0)
     return out
