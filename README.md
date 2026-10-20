@@ -1,4 +1,4 @@
-# investing
+# investing dupa dupa dupa
 
 Doradca do złota (XAU/USD). Co 15 minut liczy sygnał i wypisuje KUP, SPRZEDAJ albo CZEKAJ, z poziomami SL/TP i krótkim uzasadnieniem. Nie składa zleceń, tylko podpowiada.
 
