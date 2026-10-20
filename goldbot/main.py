@@ -30,23 +30,9 @@ def get_inputs(demo: bool, n_m15: int, n_d1: int):
         d1 = demo_daily(m15)
         print("UWAGA: dane syntetyczne. Wyniki nie mówią nic o strategii ani o rynku.")
         return (m15, d1, *demo_macro(d1))
-    api = make_source()
-    try:
-        m15, d1 = api.candles(INSTR, "M15", n_m15), api.candles(INSTR, "D", n_d1)
-    finally:
-        getattr(api, "close", lambda: None)()
+    api = Oanda()
+    m15, d1 = api.candles(INSTR, "M15", n_m15), api.candles(INSTR, "D", n_d1)
     return m15, d1, *get_macro()
-
-
-def make_source():
-    """Źródło świec z GOLDBOT_SOURCE: oanda (API v20) albo mt5 (terminal MetaTrader 5)."""
-    name = os.environ.get("GOLDBOT_SOURCE", "oanda").strip().lower()
-    if name == "mt5":
-        from mt5_source import MT5Source
-        return MT5Source()
-    if name == "oanda":
-        return Oanda()
-    raise SystemExit(f"Nieznane GOLDBOT_SOURCE='{name}'. Dozwolone: oanda, mt5.")
 
 
 def get_macro():

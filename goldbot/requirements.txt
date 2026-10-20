@@ -1,4 +1,3 @@
 pandas
 numpy
 requests
-MetaTrader5 ; sys_platform == "win32"
