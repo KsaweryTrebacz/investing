@@ -2,12 +2,6 @@
   "version": "0.0.1",
   "configurations": [
     {
-      "name": "aurum-invest",
-      "runtimeExecutable": "powershell",
-      "runtimeArgs": ["-NoProfile", "-ExecutionPolicy", "Bypass", "-File", ".claude/serve.ps1", "-Port", "8765"],
-      "port": 8765
-    },
-    {
       "name": "goldbot-dashboard-demo",
       "runtimeExecutable": "C:\\Users\\skywa\\AppData\\Local\\Programs\\Python\\Python312\\python.exe",
       "runtimeArgs": ["goldbot/main.py", "dashboard", "--demo", "--port", "8787"],
