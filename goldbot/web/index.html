@@ -1,0 +1,110 @@
+<!doctype html>
+<html lang="pl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Doradca XAU/USD</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<style>
+:root{--bg:#0b0d10;--panel:#14181d;--line:#262c34;--text:#e8e6e1;--muted:#8b929b;--gold:#d4af37;
+--buy:#3fb68b;--sell:#e5534b;--wait:#9aa4b2}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font:15px/1.5 system-ui,Segoe UI,sans-serif}
+main{max-width:1100px;margin:0 auto;padding:20px 16px 48px}
+h1{font-size:18px;margin:0 0 16px;color:var(--gold);letter-spacing:.04em}
+.grid{display:grid;gap:14px;grid-template-columns:1.1fr 1fr}
+@media(max-width:800px){.grid{grid-template-columns:1fr}}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:16px}
+.label{color:var(--muted);font-size:12px;text-transform:uppercase;letter-spacing:.08em}
+#verdict{font-size:40px;font-weight:700;margin:2px 0}
+.KUP{color:var(--buy)}.SPRZEDAJ{color:var(--sell)}.CZEKAJ{color:var(--wait)}
+.levels{display:flex;gap:18px;flex-wrap:wrap;margin:6px 0 10px}
+.levels b{display:block;font-size:18px}
+#reasoning{color:var(--text)}
+#stale{display:none;color:#e0a030;font-size:13px;margin-top:8px}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th,td{text-align:left;padding:6px 8px;border-bottom:1px solid var(--line)}
+th{color:var(--muted);font-weight:500}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:10px}
+.stats b{display:block;font-size:20px}
+.chart{height:300px;position:relative}
+.note{color:var(--muted);font-size:12px;margin-top:18px}
+</style>
+</head>
+<body>
+<main>
+<h1>DORADCA XAU/USD</h1>
+<div class="grid">
+  <section class="card">
+    <div class="label">Werdykt</div>
+    <div id="verdict" class="CZEKAJ">...</div>
+    <div class="label">Reżim dzienny</div>
+    <div id="regime">...</div>
+    <div class="levels" id="levels"></div>
+    <div id="reasoning"></div>
+    <div id="stale">Dane nieaktualne. Rynek może być zamknięty albo cykl nie działa.</div>
+  </section>
+  <section class="card">
+    <div class="label">Skuteczność wydanych rad (rozstrzygnięte)</div>
+    <div class="stats" id="stats"></div>
+    <div class="note" id="updated"></div>
+  </section>
+</div>
+<section class="card" style="margin-top:14px">
+  <div class="label">Cena (mid) M15 i wydane sygnały</div>
+  <div class="chart"><canvas id="chart"></canvas></div>
+</section>
+<section class="card" style="margin-top:14px">
+  <div class="label">Ostatnie rady</div>
+  <table><thead><tr><th>Świeca</th><th>Werdykt</th><th>Reżim</th><th>Wejście</th><th>SL</th><th>TP</th><th>Wynik</th></tr></thead>
+  <tbody id="rows"></tbody></table>
+</section>
+<p class="note">Sygnały analityczne, nie porada inwestycyjna. Wyniki historyczne nie gwarantują przyszłych.</p>
+</main>
+<script>
+const REG = {SPRZYJA_KUPNIE:"sprzyja kupnie", NEUTRALNY:"neutralny", SPRZYJA_SPRZEDAZY:"sprzyja sprzedaży"};
+const fmt = v => v == null ? "-" : Number(v).toFixed(2);
+let chart;
+function cell(tr, text, cls){const td=document.createElement("td");td.textContent=text;if(cls)td.className=cls;tr.appendChild(td);}
+function render(s){
+  const v = s.latest;
+  const vEl = document.getElementById("verdict");
+  if(!v){vEl.textContent="brak danych";vEl.className="CZEKAJ";return;}
+  vEl.textContent = v.verdict; vEl.className = v.verdict;
+  document.getElementById("regime").textContent = REG[v.regime] || v.regime;
+  const lv = document.getElementById("levels"); lv.replaceChildren();
+  if(v.entry!=null){[["Wejście",v.entry],["SL",v.sl],["TP",v.tp]].forEach(([n,x])=>{
+    const d=document.createElement("div");d.textContent=n;const b=document.createElement("b");b.textContent=fmt(x);d.prepend(b);lv.appendChild(d);});}
+  document.getElementById("reasoning").textContent = v.reasoning;
+  const st = document.getElementById("stats"); st.replaceChildren();
+  const S = s.stats;
+  const items = S.trades ? [["Rady",S.trades],["Trafność",S["win_rate_%"]+"%"],["Śr. R",S.avg_R],["Suma R",S.total_R],["Maks. spadek R",S.max_drawdown_R]]
+                         : [["Rady","0"]];
+  items.forEach(([n,x])=>{const d=document.createElement("div");d.textContent=n;const b=document.createElement("b");b.textContent=x;d.prepend(b);st.appendChild(d);});
+  const age = s.last_update ? (Date.now()-new Date(s.last_update))/60000 : null;
+  document.getElementById("stale").style.display = (age===null || age>60) ? "block" : "none";
+  document.getElementById("updated").textContent = "Ostatnia świeca: " + (s.last_update||"brak");
+  const rows = document.getElementById("rows"); rows.replaceChildren();
+  s.recent.forEach(r=>{const tr=document.createElement("tr");
+    cell(tr,r.time.replace("T"," ").slice(0,16)); cell(tr,r.verdict,r.verdict); cell(tr,REG[r.regime]||r.regime);
+    cell(tr,fmt(r.entry)); cell(tr,fmt(r.sl)); cell(tr,fmt(r.tp));
+    cell(tr,r.outcome_r==null?(r.status==="OPEN"?"otwarta":"-"):r.status+" "+Number(r.outcome_r).toFixed(2)+"R");
+    rows.appendChild(tr);});
+  const labels = s.candles.map(c=>c.t), data = s.candles.map(c=>c.c);
+  const idx = new Map(labels.map((t,i)=>[t,i]));
+  const marks = labels.map(()=>null), colors = [];
+  s.marks.forEach(m=>{const i=idx.get(m.t); if(i!==undefined) marks[i]=m.entry;});
+  const pc = labels.map((t,i)=>{const m=s.marks.find(x=>x.t===t);return m?(m.verdict==="KUP"?"#3fb68b":"#e5534b"):"transparent";});
+  const cfg = {labels, datasets:[
+    {label:"Cena",data,borderColor:"#d4af37",borderWidth:1.5,pointRadius:0,tension:.1},
+    {label:"Sygnały",data:marks,showLine:false,pointRadius:7,pointStyle:"triangle",pointBackgroundColor:pc,pointBorderColor:pc}]};
+  if(chart){chart.data=cfg;chart.update("none");}
+  else chart=new Chart(document.getElementById("chart"),{type:"line",data:cfg,options:{maintainAspectRatio:false,animation:false,
+    plugins:{legend:{display:false}},scales:{x:{ticks:{maxTicksLimit:8,color:"#8b929b",maxRotation:0,
+      callback(v){return this.getLabelForValue(v).slice(5,16).replace("T"," ");}},grid:{color:"#262c34"}},y:{ticks:{color:"#8b929b"},grid:{color:"#262c34"}}}}});
+}
+async function tick(){try{const r=await fetch("/api/state");render(await r.json());}catch(e){document.getElementById("stale").style.display="block";}}
+tick(); setInterval(tick,60000);
+</script>
+</body>
+</html>
