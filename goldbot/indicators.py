@@ -25,3 +25,18 @@ def atr(high: pd.Series, low: pd.Series, close: pd.Series, n: int = 14) -> pd.Se
     pc = close.shift(1)
     tr = pd.concat([high - low, (high - pc).abs(), (low - pc).abs()], axis=1).max(axis=1)
     return tr.ewm(alpha=1 / n, adjust=False).mean()
+
+
+def vwap(df: pd.DataFrame) -> pd.Series:
+    """VWAP sesji liczonej od 00:00 UTC, z ceny typowej mid i wolumenu. NaN, gdy brak wolumenu."""
+    if "volume" not in df or df["volume"].isna().all():
+        return pd.Series(float("nan"), index=df.index)
+    typical = sum((df[f"bid_{k}"] + df[f"ask_{k}"]) / 2 for k in "hlc") / 3
+    day = df["time"].dt.tz_convert("UTC").dt.floor("D")
+    vol = df["volume"]
+    return (typical * vol).groupby(day).cumsum() / vol.groupby(day).cumsum().replace(0, float("nan"))
+
+
+def volume_ratio(volume: pd.Series, n: int = 20) -> pd.Series:
+    """Wolumen świecy względem średniej z `n` świec."""
+    return volume / volume.rolling(n, min_periods=n).mean()

@@ -40,7 +40,8 @@ class Oanda:
             to = data[0]["time"]
         recs = [{"time": pd.Timestamp(c["time"]),
                  **{f"bid_{k}": float(c["bid"][k]) for k in "ohlc"},
-                 **{f"ask_{k}": float(c["ask"][k]) for k in "ohlc"}} for c in rows]
+                 **{f"ask_{k}": float(c["ask"][k]) for k in "ohlc"},
+                 "volume": float(c.get("volume", "nan"))} for c in rows]  # wolumen tickowy (liczba zmian ceny)
         return pd.DataFrame(recs).drop_duplicates("time").sort_values("time").reset_index(drop=True)
 
 
@@ -56,6 +57,7 @@ def demo_candles(bars=5000, seed=7) -> pd.DataFrame:
     d = {"time": t}
     for k, v in zip("ohlc", (o, hi, lo, px)):
         d[f"bid_{k}"], d[f"ask_{k}"] = v - half, v + half
+    d["volume"] = np.random.default_rng(seed + 1).integers(50, 500, bars).astype(float)  # osobny generator: ceny bez zmian
     return pd.DataFrame(d)
 
 
@@ -64,6 +66,8 @@ def demo_daily(m15: pd.DataFrame) -> pd.DataFrame:
     agg = {}
     for side in ("bid", "ask"):
         agg.update({f"{side}_o": "first", f"{side}_h": "max", f"{side}_l": "min", f"{side}_c": "last"})
+    if "volume" in m15:
+        agg["volume"] = "sum"
     return m15.set_index("time").resample("1D").agg(agg).dropna().reset_index()
 
 
