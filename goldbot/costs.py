@@ -60,6 +60,19 @@ def per_unit_costs(c: Costs, side: int, price: float, atr: float, start, end) ->
             "slippage": slippage, "missing": missing}
 
 
+def cost_coverage(c: Costs | None) -> tuple[list, list]:
+    """(uwzględnione, brakujące) składniki kosztów w backteście i rozliczaniu rad."""
+    included, missing = ["spread (ceny bid/ask)", "luka cenowa na SL (wykonanie po otwarciu)"], []
+    c = c or Costs()
+    known = {"prowizja": c.commission_per_unit is not None or c.commission_rate is not None,
+             "finansowanie overnight": any(x is not None for x in (
+                 c.financing_long_rate, c.financing_short_rate, c.swap_long_per_unit, c.swap_short_per_unit)),
+             "poślizg na SL": c.slippage_atr is not None}
+    for name, ok in known.items():
+        (included if ok else missing).append(name)
+    return included, missing
+
+
 def holding_estimate(resolved: list, expire_hours: int = 48, min_n: int = 10) -> dict:
     """Przewidywany czas utrzymania: mediana z rozliczonych rad albo górna granica (wygaśnięcie)."""
     hours = [(pd.Timestamp(r["resolved_time"]) - pd.Timestamp(r["time"])).total_seconds() / 3600

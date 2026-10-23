@@ -11,7 +11,7 @@ from strategy import Params
 MIN_D1 = 200
 
 
-def run_cycle(m15, d1, usd, yld, store, send=None, p: Params = Params(), now=None) -> dict:
+def run_cycle(m15, d1, usd, yld, store, send=None, p: Params = Params(), now=None, costs=None) -> dict:
     """Rzuca guards.DataError, gdy dane są uszkodzone. Wtedy nic nie jest zapisywane."""
     validate_candles(m15, "M15", p.ema_len + 50)
     validate_candles(d1, "D1", MIN_D1)
@@ -22,7 +22,7 @@ def run_cycle(m15, d1, usd, yld, store, send=None, p: Params = Params(), now=Non
 
     resolved = 0
     for open_v in store.open_verdicts():
-        res = resolve(open_v, m15)
+        res = resolve(open_v, m15, costs=costs)
         if res:
             store.close_verdict(open_v["id"], *res)
             resolved += 1

@@ -39,3 +39,25 @@ def test_wide_spread_skips_entry():
 def test_stats_are_plain_python_numbers():
     s = backtest.run(tp_frame(), Params())[1]
     assert all(type(v) in (int, float) for v in s.values())
+
+
+def test_gap_through_stop_is_worse_than_minus_1R():
+    df = pd.DataFrame([bar(0, 100, 100.5, 99.5, 100, signal=1), bar(1, 100, 100.5, 99.5, 100),
+                       bar(2, 97, 97.2, 96.5, 97), bar(3, 97, 97, 97, 97)])
+    t, _ = backtest.run(df, Params())
+    assert t.iloc[0].reason == "SL" and t.iloc[0].R < -1.0  # wyjście po otwarciu 96,9 zamiast SL 98,6
+
+
+def test_costs_reduce_result():
+    from config import Costs
+    c = Costs(commission_per_unit=0.15, financing_long_rate=0.0, slippage_atr=0.0)
+    t, _ = backtest.run(tp_frame(), Params(), costs=c)
+    assert abs(t.iloc[0].R - (2.0 - 0.3 / 1.5)) < 1e-9
+
+
+def test_position_expires_like_live_advice():
+    rows = [bar(0, 100, 100.5, 99.5, 100, signal=1)] + [bar(t, 100, 100.5, 99.5, 100) for t in range(1, 200)]
+    t, _ = backtest.run(pd.DataFrame(rows), Params())
+    assert t.iloc[0].reason == "EXPIRED"
+    assert t.iloc[0].exit_time - t.iloc[0].entry_time == pd.Timedelta(hours=48)
+    assert backtest.run(pd.DataFrame(rows), Params(), expire_hours=None)[0].iloc[0].reason == "END"

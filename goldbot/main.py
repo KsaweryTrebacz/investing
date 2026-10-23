@@ -10,6 +10,8 @@ import sys
 
 import pandas as pd
 
+from config import load_config
+from costs import cost_coverage
 from guards import DataError, validate_candles
 from macro import USD_SERIES, YIELD_SERIES, fetch_series
 from oanda import Oanda, demo_candles, demo_daily, demo_macro
@@ -95,6 +97,7 @@ def cmd_dashboard(args):
 
 def cmd_validate(args):
     from pipeline import prepare
+    from strategy import Params
     from validate import walk_forward
 
     try:
@@ -108,12 +111,19 @@ def cmd_validate(args):
     except DataError as e:
         print(f"Dane odrzucone: {e}")
         return 1
+    cfg = load_config()
+    costs = cfg.instrument(INSTR).costs
     df = prepare(m15, d1, usd, yld)
-    res = walk_forward(df, split=args.split)
+    res = walk_forward(df, Params(risk_per_trade=cfg.account.risk_per_trade), split=args.split, costs=costs)
     pd.set_option("display.width", 200)
     print(f"Świece M15: {len(df)}  ({df.time.iloc[0]} -> {df.time.iloc[-1]}), podział {args.split:.0%}/{1 - args.split:.0%}")
     print(pd.DataFrame(res).T.fillna(0).to_string())
-    print("Liczy się okres out_of_sample po kosztach. Mało transakcji oznacza wynik bez znaczenia statystycznego.")
+    included, missing = cost_coverage(costs)
+    print("Uwzględnione koszty: " + ", ".join(included) + ".")
+    if missing:
+        print("BRAK DANYCH o kosztach: " + ", ".join(missing) + ". Wynik jest zawyżony o te koszty, "
+              "uzupełnij je w config.json (sekcja costs instrumentu).")
+    print("Liczy się okres out_of_sample. Mało transakcji oznacza wynik bez znaczenia statystycznego.")
     return 0
 
 

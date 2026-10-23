@@ -57,3 +57,44 @@ def test_current_roundtrip():
     assert s.get_current() is None
     s.set_current({"verdict": "CZEKAJ", "entry": None})
     assert s.get_current() == {"verdict": "CZEKAJ", "entry": None}
+
+
+def test_volume_roundtrip_and_optional():
+    s = Store()
+    df = demo_candles(5).assign(volume=[10, 20, 30, 40, 50])
+    s.upsert_candles("M15", df)
+    assert s.load_candles("M15", 10)["volume"].tolist() == [10, 20, 30, 40, 50]
+    s.upsert_candles("D", demo_candles(3).drop(columns=["volume"], errors="ignore"))
+    assert s.load_candles("D", 10)["volume"].isna().all()
+
+
+def test_old_database_is_migrated(tmp_path):
+    import sqlite3
+    path = str(tmp_path / "stara.db")
+    old = sqlite3.connect(path)
+    old.executescript("""
+        CREATE TABLE candles (granularity TEXT NOT NULL, time TEXT NOT NULL, bid_o REAL NOT NULL,
+            bid_h REAL NOT NULL, bid_l REAL NOT NULL, bid_c REAL NOT NULL, ask_o REAL NOT NULL,
+            ask_h REAL NOT NULL, ask_l REAL NOT NULL, ask_c REAL NOT NULL, PRIMARY KEY (granularity, time));
+        CREATE TABLE verdicts (id INTEGER PRIMARY KEY AUTOINCREMENT, time TEXT UNIQUE NOT NULL,
+            verdict TEXT NOT NULL, regime TEXT NOT NULL, entry REAL, sl REAL, tp REAL, atr REAL, reasoning TEXT,
+            status TEXT NOT NULL, outcome_r REAL, resolved_time TEXT);
+        INSERT INTO verdicts (time, verdict, regime, status) VALUES ('2026-01-01T00:00:00+00:00', 'CZEKAJ', 'NEUTRALNY', 'NONE');
+    """)
+    old.close()
+    s = Store(path)
+    assert s.last_verdict()["decision"] is None and "cost_r" in s.last_verdict()
+    s.upsert_candles("M15", demo_candles(3))
+    assert len(s.load_candles("M15", 10)) == 3
+
+
+def test_report_and_net_stats():
+    s = Store()
+    v = {**verdict("2026-01-05T10:00:00+00:00"), "decision": "MOZLIWA_TRANSAKCJA", "report": {"a": 1}}
+    vid = s.add_verdict(v)
+    s.close_verdict(vid, "TP", 2.0, "2026-01-05T12:00:00+00:00", cost_r=0.1)
+    assert s.stats()["total_R_net"] == 1.9
+    assert s.resolved_verdicts(5)[0]["resolved_time"] == "2026-01-05T12:00:00+00:00"
+    vid = s.add_verdict(verdict("2026-01-06T10:00:00+00:00"))
+    s.close_verdict(vid, "SL", -1.0, "2026-01-06T11:00:00+00:00")
+    assert s.stats()["total_R_net"] is None  # koszt jednej rady nieznany
