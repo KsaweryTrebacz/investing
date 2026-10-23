@@ -38,8 +38,8 @@ def load_csv_events(path: str, fetched_at) -> list:
     with open(path, encoding="utf-8", newline="") as f:
         for row in csv.DictReader(f):
             row = {k: (v or "").strip() for k, v in row.items() if k}
-            if not row.get("time") or not row.get("name"):
-                continue
+            if not row.get("time") or not row.get("name") or row["time"].startswith("#"):
+                continue  # pusty wiersz albo komentarz
             amount = float(row["amount"]) if row.get("amount") else None
             out.append(make_event(row["time"], row["name"], row.get("source") or f"plik {os.path.basename(path)}",
                                   fetched_at, row.get("importance") or HIGH, row.get("scope") or "*",

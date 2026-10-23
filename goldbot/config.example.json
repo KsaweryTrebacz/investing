@@ -1,0 +1,64 @@
+{
+  "_opis": "Skopiuj jako config.json i uzupełnij. null = brak danych: raport to wypisze, a wynik będzie orientacyjny. Klucze zaczynające się od _ są komentarzami.",
+
+  "account": {
+    "_opis": "capital = wartość rachunku w walucie rachunku. risk_per_trade 0.005 = 0,5% kapitału. Limity portfela to założenia robocze.",
+    "currency": "PLN",
+    "capital": null,
+    "risk_per_trade": 0.005,
+    "max_total_risk": 0.02,
+    "max_group_risk": 0.01
+  },
+
+  "fx_rates": {
+    "_opis": "Kurs waluty kwotowania na walutę rachunku, gdy nie da się go pobrać z OANDA. Para jako QUOTE+ACCOUNT, np. USDPLN.",
+    "USDPLN": {"rate": null, "as_of": null, "source": null}
+  },
+
+  "positions_file": "positions.json",
+
+  "events": {
+    "_opis": "file: własny kalendarz CSV (wzór events.example.csv). fred_releases: release_id z fred.stlouisfed.org/releases; nazwę publikacji podaje FRED, więc sprawdź ją w raporcie. 10 = Consumer Price Index.",
+    "file": "events.csv",
+    "fred_releases": [10],
+    "guard_hours": 2,
+    "news_refresh_hours": 3,
+    "company_refresh_hours": 24
+  },
+
+  "instruments": {
+    "XAU_USD": {
+      "group": "metale szlachetne",
+      "macro": true,
+      "source": "oanda",
+      "news": {"topics": "economy_monetary,economy_macro"},
+      "costs": {
+        "_opis": "Dane z tabeli opłat brokera, w walucie kwotowania (USD). Stopy jako ułamki. Finansowanie jak w OANDA: ujemne = płacisz.",
+        "source": null,
+        "as_of": null,
+        "margin_rate": null,
+        "commission_per_unit": null,
+        "commission_rate": null,
+        "financing_long_rate": null,
+        "financing_short_rate": null,
+        "swap_long_per_unit": null,
+        "swap_short_per_unit": null,
+        "triple_financing_weekday": 2,
+        "slippage_atr": null,
+        "units_step": 1
+      }
+    },
+
+    "_przyklad_akcja_z_tradingview": {
+      "_opis": "Szablon: zmień klucz na nazwę instrumentu (np. AAPL_USD), żeby go włączyć. Świece z eksportu CSV TradingView, wyniki i dywidendy z Alpha Vantage.",
+      "group": "technologia",
+      "macro": false,
+      "source": "csv",
+      "csv": {"m15": "dane/AAPL_M15.csv", "d1": "dane/AAPL_D1.csv", "spread": null},
+      "symbol": "AAPL",
+      "news": {"tickers": "AAPL"},
+      "costs": {"margin_rate": null, "commission_rate": null, "financing_long_rate": null,
+                "financing_short_rate": null, "slippage_atr": null, "dividend_share": null, "units_step": 1}
+    }
+  }
+}

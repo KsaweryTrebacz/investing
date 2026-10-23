@@ -52,3 +52,14 @@ def test_relative_paths_follow_config_file(tmp_path):
 def test_unknown_instrument_has_no_macro_regime():
     i = Config().instrument("SPX500_USD")
     assert i.quote == "USD" and not i.macro
+
+
+def test_example_files_are_valid():
+    from config import HERE
+    from events import load_csv_events
+    from risk import load_positions
+    cfg = load_config(os.path.join(HERE, "config.example.json"))
+    assert list(cfg.instruments) == ["XAU_USD"] and cfg.account.risk_per_trade == 0.005
+    assert cfg.instruments["XAU_USD"].costs.margin_rate is None and cfg.events["fred_releases"] == [10]
+    assert load_positions(os.path.join(HERE, "positions.example.json"))["positions"] == []
+    assert load_csv_events(os.path.join(HERE, "events.example.csv"), "2026-10-23") == []

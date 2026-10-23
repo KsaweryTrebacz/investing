@@ -1,0 +1,5 @@
+time,name,importance,scope,kind,amount,source,published
+# Skopiuj jako events.csv. time: RRRR-MM-DD (cały dzień UTC) albo RRRR-MM-DD GG:MM (UTC). importance: wysoka/średnia/niska.
+# scope: * (wszystko), waluta (USD), instrument (XAU_USD) albo symbol spółki. kind: makro/wyniki/dywidenda/inne; amount tylko dla dywidendy.
+# Wiersze zaczynające się od # są pomijane. Poniżej tylko wzór formatu, nie prawdziwe terminy:
+# RRRR-MM-DD 12:30,Nazwa publikacji,wysoka,USD,makro,,źródło kalendarza,RRRR-MM-DD

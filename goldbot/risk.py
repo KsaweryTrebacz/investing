@@ -70,7 +70,7 @@ def plan_trade(v: dict, instr: Instrument, account: Account, fx: dict | None, ho
             "fx": fx, "risk_per_trade": account.risk_per_trade, "budget": None, "units": None, "loss": None,
             "gain": None, "notional": None, "margin": None, "missing": missing, "exact": not missing,
             "holding": holding, "note": GAP_NOTE}
-    if fx is None or account.capital is None:
+    if fx is None or account.capital is None or loss_pu <= 0:
         return plan
     rate, step = fx["rate"], instr.costs.units_step
     budget = account.capital * account.risk_per_trade
