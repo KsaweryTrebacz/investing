@@ -18,7 +18,7 @@ class Params:
     sl_atr: float = 1.5
     tp_atr: float = 3.0         # RRR 1:2
     max_spread_atr: float = 0.25  # pomiń wejście, gdy spread > 25% ATR (założenie)
-    risk_per_trade: float = 0.01  # 1% kapitału na transakcję (założenie)
+    risk_per_trade: float = 0.005  # 0,5% kapitału na transakcję
 
 
 def add_signals(df: pd.DataFrame, p: Params = Params()) -> pd.DataFrame:
