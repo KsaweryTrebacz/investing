@@ -114,11 +114,17 @@ class Store:
                 "avg_R": round(float(r.mean()), 3), "total_R": round(float(cum[-1]), 3),
                 "max_drawdown_R": round(float((cum - peak).min()), 3), "total_R_net": net}
 
-    # --- ostatni werdykt cyklu (także niezapisany w historii) ---
-    def set_current(self, v: dict):
+    # --- stan: ostatni werdykt cyklu (także niezapisany w historii) i bufor danych z API ---
+    def set_state(self, key: str, value):
         with self.db:
-            self.db.execute("INSERT OR REPLACE INTO state VALUES ('current', ?)", (json.dumps(v, default=str),))
+            self.db.execute("INSERT OR REPLACE INTO state VALUES (?, ?)", (key, json.dumps(value, default=str)))
+
+    def get_state(self, key: str):
+        r = self.db.execute("SELECT value FROM state WHERE key=?", (key,)).fetchone()
+        return json.loads(r[0]) if r else None
+
+    def set_current(self, v: dict):
+        self.set_state("current", v)
 
     def get_current(self):
-        r = self.db.execute("SELECT value FROM state WHERE key='current'").fetchone()
-        return json.loads(r[0]) if r else None
+        return self.get_state("current")

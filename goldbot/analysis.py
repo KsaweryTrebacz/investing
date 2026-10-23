@@ -32,6 +32,7 @@ def ema_stack(close: pd.Series) -> dict:
 def market_facts(df: pd.DataFrame, d1: pd.DataFrame) -> dict:
     """df: wynik pipeline.prepare (M15 z sygnałami i reżimem), d1: zamknięte świece dzienne."""
     last = df.iloc[-1]
+    d1 = d1[d1["time"] + pd.Timedelta(days=1) <= last["time"] + pd.Timedelta(minutes=15)]  # tylko zamknięte dni
     d1m = with_mid(d1.reset_index(drop=True))
     d1_atr = _num(atr(d1m["mid_h"], d1m["mid_l"], d1m["mid_c"]).iloc[-1])
     vr = volume_ratio(df["volume"]) if "volume" in df else pd.Series(float("nan"), index=df.index)

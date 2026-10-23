@@ -36,7 +36,7 @@ def test_http_serves_page_and_state(tmp_path):
     threading.Thread(target=server.serve_forever, daemon=True).start()
     base = f"http://127.0.0.1:{server.server_address[1]}"
     try:
-        assert b"DORADCA XAU/USD" in urllib.request.urlopen(base + "/").read()
+        assert b"DORADCA CFD" in urllib.request.urlopen(base + "/").read()
         state = json.loads(urllib.request.urlopen(base + "/api/state").read())
         assert state["latest"]["verdict"] in ("KUP", "SPRZEDAJ", "CZEKAJ")
     finally:

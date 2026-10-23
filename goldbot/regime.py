@@ -44,8 +44,12 @@ def _macro_component(s, keys: pd.Series) -> pd.Series:
     return pd.Series(d.reindex(pd.DatetimeIndex(keys), method="ffill").to_numpy(), index=keys.index)
 
 
-def build_regime(d1: pd.DataFrame, usd=None, yld=None, enter: int = 2, confirm: int = 2) -> pd.DataFrame:
-    """d1: świece dzienne (kolumny time, bid_c, ask_c). Reżim danego dnia obowiązuje od `known_from`."""
+def build_regime(d1: pd.DataFrame, usd=None, yld=None, enter: int = 2, confirm: int = 2,
+                 macro: bool = True) -> pd.DataFrame:
+    """d1: świece dzienne (kolumny time, bid_c, ask_c). Reżim danego dnia obowiązuje od `known_from`.
+
+    macro=False (instrumenty inne niż złoto): reżim tylko z trendu D1, próg 1.
+    """
     d1 = d1.reset_index(drop=True)
     close = (d1["bid_c"] + d1["ask_c"]) / 2
     known_from = d1["time"] + pd.Timedelta(days=1)
@@ -53,9 +57,12 @@ def build_regime(d1: pd.DataFrame, usd=None, yld=None, enter: int = 2, confirm: 
 
     out = pd.DataFrame({"time": d1["time"], "known_from": known_from})
     out["trend"] = trend_dir(close, 50, 200)
-    out["dollar"] = _macro_component(usd, keys)
-    out["yields"] = _macro_component(yld, keys)
-    out["total"] = out["trend"] + out["dollar"] + out["yields"]  # NaN gdy brakuje któregokolwiek składnika
+    out["dollar"] = _macro_component(usd if macro else None, keys)
+    out["yields"] = _macro_component(yld if macro else None, keys)
+    if macro:
+        out["total"] = out["trend"] + out["dollar"] + out["yields"]  # NaN gdy brakuje któregokolwiek składnika
+    else:
+        out["total"], enter = out["trend"], 1
 
     raw = pd.Series(REGIME_NEUTRAL, index=out.index)
     raw[out["total"] >= enter] = REGIME_BUY

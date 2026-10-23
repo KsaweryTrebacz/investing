@@ -4,6 +4,7 @@ import os
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 
 from advisor import TRADE
+from report import render_text
 from store import Store
 
 WEB = os.path.join(os.path.dirname(os.path.abspath(__file__)), "web")
@@ -12,10 +13,14 @@ WEB = os.path.join(os.path.dirname(os.path.abspath(__file__)), "web")
 def build_state(store: Store, n_candles: int = 200) -> dict:
     c = store.load_candles("M15", n_candles)
     mid = ((c["bid_c"] + c["ask_c"]) / 2).round(2)
-    recent = store.recent_verdicts(20)
+    recent = [{k: v for k, v in r.items() if k != "report"} for r in store.recent_verdicts(20)]
+    latest = store.get_current()
+    report = (latest or {}).get("report")
     return {
         "last_update": c["time"].iloc[-1].isoformat() if len(c) else None,
-        "latest": store.get_current(),
+        "latest": latest,
+        "instrument": report["instrument"] if report else None,
+        "report_text": render_text(report) if report else None,
         "recent": recent,
         "stats": store.stats(),
         "candles": [{"t": t.isoformat(), "c": float(v)} for t, v in zip(c["time"], mid)],

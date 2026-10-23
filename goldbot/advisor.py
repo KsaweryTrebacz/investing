@@ -13,7 +13,9 @@ def _component(name, v, up, down, flat):
     return f"{name}: " + (up if v > 0 else down if v < 0 else flat)
 
 
-def regime_text(row) -> str:
+def regime_text(row, macro: bool = True) -> str:
+    if not macro:
+        return _component("trend D1", row["trend"], "wzrostowy", "spadkowy", "boczny")
     return "; ".join([
         _component("trend złota", row["trend"], "wzrostowy", "spadkowy", "boczny"),
         _component("dolar", row["dollar"], "słabnie, sprzyja złotu", "umacnia się, szkodzi złotu", "boczny"),
@@ -22,16 +24,17 @@ def regime_text(row) -> str:
     ])
 
 
-def make_verdict(df: pd.DataFrame, p: Params = Params()) -> dict:
+def make_verdict(df: pd.DataFrame, p: Params = Params(), macro: bool = True) -> dict:
     """Werdykt na podstawie ostatniej ZAMKNIĘTEJ świecy ramki z pipeline.prepare."""
     last = df.iloc[-1]
     spread = float(last["ask_c"] - last["bid_c"])
     atr_v = float(last["atr"])
     sig, raw = int(last["signal"]), int(last["signal_raw"])
-    lines = [f"Reżim dzienny: {REGIME_PL[last['regime']]} ({regime_text(last)})."]
+    lines = [f"Reżim dzienny: {REGIME_PL[last['regime']]} ({regime_text(last, macro)})."]
 
-    verdict, entry, sl, tp = "CZEKAJ", None, None, None
+    verdict, entry, sl, tp, blocked = "CZEKAJ", None, None, None, []
     if sig != 0 and spread > p.max_spread_atr * atr_v:
+        blocked.append("spread")
         lines.append(f"Sygnał M15 odrzucony: spread {spread:.2f} przekracza {p.max_spread_atr:.0%} ATR.")
     elif sig != 0:
         verdict = "KUP" if sig == 1 else "SPRZEDAJ"
@@ -45,6 +48,9 @@ def make_verdict(df: pd.DataFrame, p: Params = Params()) -> dict:
     else:
         lines.append("Brak sygnału M15: czekamy na korektę RSI i przecięcie MACD.")
 
-    return {"time": last["time"].isoformat(), "verdict": verdict, "regime": last["regime"],
-            "entry": entry, "sl": sl, "tp": tp, "atr": atr_v, "reasoning": " ".join(lines),
-            "status": "OPEN" if verdict in TRADE else "NONE"}
+    out = {"time": last["time"].isoformat(), "verdict": verdict, "regime": last["regime"],
+           "entry": entry, "sl": sl, "tp": tp, "atr": atr_v, "reasoning": " ".join(lines),
+           "status": "OPEN" if verdict in TRADE else "NONE", "signal_raw": raw}
+    if blocked:
+        out["blocked"] = blocked
+    return out

@@ -67,7 +67,8 @@ def analyze(d: pd.DataFrame, atr: float, n: int = 3, lookback: int = 300, recent
             touch = after["mid_l"] <= level + retest_atr * atr if sign == 1 else after["mid_h"] >= level - retest_atr * atr
             held = sign * (after["mid_c"] - level) > 0
             events.append({"direction": sign, "level": float(level), "bars_ago": int(last - b),
-                           "retest": bool((touch & held).any()), "holding": bool(sign * (price - level) > 0)})
+                           "holding": bool(sign * (price - level) > 0)})
+            events[-1]["retest"] = bool((touch & held).any()) and events[-1]["holding"]
     if events:
         out["breakout"] = min(events, key=lambda e: e["bars_ago"])
     return out

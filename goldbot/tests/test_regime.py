@@ -57,3 +57,27 @@ def test_attach_regime_uses_only_known_days():
     df15 = pd.DataFrame({"time": pd.to_datetime(["2026-01-05 23:45", "2026-01-06 00:00"], utc=True)})
     out = attach_regime(df15, reg)
     assert out.regime.tolist() == [REGIME_NEUTRAL, REGIME_BUY]
+
+
+def test_instrument_without_macro_uses_trend_only():
+    from oanda import demo_candles, demo_daily
+    d1 = demo_daily(demo_candles(40000))
+    gold = build_regime(d1)  # złoto bez danych makro: zawsze neutralny
+    other = build_regime(d1, macro=False)
+    assert set(gold["regime"]) == {REGIME_NEUTRAL}
+    assert {REGIME_BUY, REGIME_SELL} & set(other["regime"])
+    assert other["dollar"].isna().all() and (other["total"].dropna() == other["trend"].dropna()).all()
+
+
+def test_cycle_for_other_instrument():
+    from config import Config, Instrument
+    from cycle import Context, run_cycle
+    from oanda import demo_candles, demo_daily
+    from store import Store
+    m15 = demo_candles(30000)
+    cfg = Config()
+    cfg.instruments = {"SPX500_USD": Instrument(name="SPX500_USD", group="indeksy", macro=False)}
+    v = run_cycle(m15, demo_daily(m15), None, None, Store(), ctx=Context(cfg=cfg, instrument="SPX500_USD"))["verdict"]
+    names = [r["name"] for r in v["report"]["checks"]]
+    assert v["report"]["instrument"] == "SPX500_USD" and "Dolar (szeroki indeks)" not in names
+    assert "trend D1" in v["reasoning"]

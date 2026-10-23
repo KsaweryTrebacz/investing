@@ -41,19 +41,22 @@ def macro_is_stale(s: pd.Series, now, max_days: int = 10) -> bool:
 def apply_guards(v: dict, store, now, last_open, tf=pd.Timedelta(minutes=15)) -> dict:
     """Zamienia radę handlową na CZEKAJ, gdy dane są nieaktualne, poprzednia rada jest otwarta
     albo dzisiejsze rozliczone rady przekroczyły dzienny limit strat. Powód trafia do uzasadnienia."""
-    reasons = []
+    reasons, codes = [], []
     if is_stale(last_open, now, tf):
+        codes.append("stale")
         reasons.append(f"Dane nieaktualne: ostatnia zamknięta świeca z {last_open:%Y-%m-%d %H:%M} UTC.")
     if v["verdict"] in TRADE:
         for o in store.open_verdicts()[:1]:
+            codes.append("open_advice")
             reasons.append(f"Poprzednia rada {o['verdict']} z {o['time'][:16].replace('T', ' ')} jest jeszcze otwarta.")
         day_start = now.normalize().isoformat()
         if store.realized_r_since(day_start) <= DAILY_LOSS_LIMIT_R:
+            codes.append("daily_loss")
             reasons.append(f"Dzienny limit strat rad ({DAILY_LOSS_LIMIT_R:g}R) osiągnięty, "
                            "nowe rady handlowe wstrzymane do końca dnia UTC.")
     if not reasons:
         return v
-    out = dict(v)
+    out = dict(v, blocked=v.get("blocked", []) + codes)
     if v["verdict"] in TRADE:
         out.update(verdict="CZEKAJ", entry=None, sl=None, tp=None, status="NONE")
         reasons.insert(0, f"Sygnał {v['verdict']} wstrzymany przez zabezpieczenia.")

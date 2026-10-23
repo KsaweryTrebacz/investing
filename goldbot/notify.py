@@ -10,12 +10,14 @@ DISCLAIMER = "Sygnał analityczny, nie porada inwestycyjna."
 
 
 def should_store(prev, new) -> bool:
-    """Zapisz werdykt, gdy to pierwszy, albo nowa świeca z werdyktem handlowym lub zmianą werdykt+reżim."""
+    """Zapisz werdykt, gdy to pierwszy, albo nowa świeca z werdyktem handlowym lub zmianą werdyktu,
+    reżimu albo statusu decyzji."""
     if prev is None:
         return True
     if new["time"] == prev["time"]:
         return False
-    return new["verdict"] in TRADE or (new["verdict"], new["regime"]) != (prev["verdict"], prev["regime"])
+    key = lambda v: (v["verdict"], v["regime"], v.get("decision"))  # noqa: E731
+    return new["verdict"] in TRADE or key(new) != key(prev)
 
 
 def should_notify(prev, new) -> bool:
@@ -28,6 +30,9 @@ def should_notify(prev, new) -> bool:
 
 
 def format_message(v: dict) -> str:
+    if v.get("report"):
+        from report import render_telegram
+        return render_telegram(v["report"])
     lines = [f"XAU/USD: {v['verdict']}", f"Reżim dzienny: {REGIME_PL[v['regime']]}"]
     if v["verdict"] in TRADE:
         lines.append(f"Wejście ok. {v['entry']:.2f}  SL {v['sl']:.2f}  TP {v['tp']:.2f}")

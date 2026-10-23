@@ -3,7 +3,7 @@ from regime import attach_regime, build_regime
 from strategy import Params, add_signals, gate_by_regime
 
 
-def prepare(m15, d1, usd=None, yld=None, p: Params = Params()):
+def prepare(m15, d1, usd=None, yld=None, p: Params = Params(), macro: bool = True):
     sig = add_signals(m15, p)
-    reg = build_regime(d1, usd, yld)
+    reg = build_regime(d1, usd, yld, macro=macro)
     return gate_by_regime(attach_regime(sig, reg))
