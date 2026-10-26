@@ -1,13 +1,13 @@
 # Optymalizacja i testy skuteczności na publicznych danych złota
 
-Data: 2026-10-26. Wyniki surowe: `docs/research/wyniki/` (study.json, trend.json, grid_full_period.csv.gz).
-Kod: `goldbot/research/` (datasets.py, study.py, trend.py, download.sh).
+Data: 2026-10-26. Wyniki surowe: `docs/research/wyniki/` (study.json, trend.json, edges.json, grid_full_period.csv.gz).
+Kod: `goldbot/research/` (datasets.py, study.py, trend.py, edges.py, download.sh).
 
 ## Wniosek
 
 Strategia doradcy (M15: EMA 200, powrót RSI z korekty, przecięcie MACD, reżim dzienny) **nie ma przewagi na złocie**. Bez kosztów jej średni wynik to około 0R na transakcję, czyli tyle, ile losowe wejścia. Po realnym spreadzie i kosztach traci średnio 0,16R na transakcję, w 15 z 17 lat. Optymalizacja 2880 wariantów nie pomogła: wybór parametrów na latach poprzednich dał poza próbą −0,17R na transakcję. Żaden wariant, także wybrany ze znajomością przyszłości, nie ma istotnie dodatniego wyniku.
 
-Najlepszy wynik przy kontroli ryzyka utraty kapitału daje więc **niezawieranie transakcji z tej strategii**. Program dostał bramkę walidacji: dopóki strategia nie jest oznaczona jako zwalidowana, sygnał daje najwyżej status „obserwacja”.
+Najlepszy wynik przy kontroli ryzyka utraty kapitału daje więc **niezawieranie transakcji z tej strategii**. Inne rodziny strategii, testowane bez ograniczeń ryzyka (punkt 8), też nie mają trwałej przewagi. Jedynym stałym źródłem zysku w danych był długoterminowy wzrost ceny złota, a przy CFD większość tego zysku zjada finansowanie. Program dostał bramkę walidacji: dopóki strategia nie jest oznaczona jako zwalidowana, sygnał daje najwyżej status „obserwacja”.
 
 ## Dane
 
@@ -94,6 +94,39 @@ Przy ujemnej wartości oczekiwanej większe ryzyko na transakcję nie zwiększa 
 
 Trend w wersji tylko LONG jest na plusie, ale bez istotności statystycznej (t < 1) i przy 0,5% ryzyka daje kilka procent w 17 lat. Odzwierciedla raczej wzrost ceny złota w tym okresie niż przewagę reguły. Nie wdrażam jej jako strategii doradcy.
 
+### 8. Inne rodziny strategii bez ograniczeń ryzyka (research/edges.py)
+
+Pozycja 1x wartości nominalnej, bez stopów i bez limitu ryzyka. Spread z cen bid/ask, finansowanie za każdy rollover (LONG −5%, SHORT −1% rocznie). Na danych jednocenowych pominięto godziny 20–22 UTC: w przerwie dziennej spread rośnie do 15 pb, a cena bid najpierw spada, potem odbija, co na wykresie wygląda jak zysk, którego nie da się zrealizować. Sprawdzono to na cenie środkowej Dukascopy.
+
+| Rodzina | Warianty | Walk-forward BaseMax 2008–2024 (łącznie, t) | Walk-forward Dukascopy 2015–2018 |
+|---|---|---|---|
+| Sesja (pozycja od h1 do h2 UTC, LONG albo SHORT) | 438 | −51%, t −1,58 | +9%, t 0,59 |
+| Momentum (zmiana ceny z 5–250 dni) | 12 | −29%, t −0,28 | −21% |
+| Cena względem średniej 20–200 dni | 8 | −45%, t −0,94 | −6% |
+| Powrót do średniej RSI(2) | 6 | od −9% do −38% | −12% |
+| Wybicie z zakresu 01–07 UTC | 2 | +1%, t 0,27 | +31%, t 1,46 |
+| Wszystkie rodziny razem | 466 | −9%, t 0,11 | +18%, t 0,97 |
+| Kup i trzymaj (CFD z finansowaniem) | – | +35%, największy spadek −56% | −9% |
+
+Stabilność w czasie, strategie stałe (bez doboru parametrów):
+
+| Strategia | 2004–2010 | 2011–2017 | 2018–2025 |
+|---|---|---|---|
+| SHORT 07–15 UTC (godziny Londynu) | −4% (t 0,1) | **+78% (t 2,1)**, Dukascopy +72% (t 2,0) | **−44% (t −2,0)** |
+| LONG 23–07 UTC (sesja azjatycka) | +9% (t 0,7) | +0% (t 0,1) | −20% (t −1,4) |
+
+Słabość złota w godzinach Londynu w latach 2011–2017 widać na obu źródłach. Opiera się jednak głównie na bessie z lat 2013 (+47%) i 2015 (+23%), a od 2018 roku strategia traci. To nie jest trwała przewaga.
+
+Strategie dzienne a koszt finansowania (BaseMax 2008–2024, roczne tempo wzrostu):
+
+| Finansowanie LONG | Kup i trzymaj | Momentum 120 dni, LONG albo bez pozycji | Średnia 200 dni, LONG albo bez pozycji |
+|---|---|---|---|
+| −5% | +1,8% (spadek −56%) | +2,6% (−37%) | +1,6% (−39%) |
+| −2,5% | +4,4% (−50%) | +4,3% (−34%) | +3,2% (−34%) |
+| 0% | +7,0% (−45%) | +6,0% (−32%) | +4,9% (−32%) |
+
+Filtry trendu nie dają wyższego zwrotu niż samo trzymanie złota, tylko mniejsze spadki. Przy CFD koszt finansowania zjada większość zysku. Bez ograniczeń ryzyka najwyższy zwrot w badanym okresie dawało więc trzymanie złota bez dźwigni i bez finansowania (np. fizyczne złoto albo fundusz), a nie strategia transakcyjna. Dźwignia mnoży zarówno ten zwrot, jak i spadki (−45% bez dźwigni).
+
 ## Zmiany w programie
 
 - `strategy_validated` w konfiguracji instrumentu (domyślnie `false`): sygnał M15 daje najwyżej „obserwację”, a plan jest pokazany jako wstrzymany, z odnośnikiem do tego raportu. Zmienić na `true` można dopiero, gdy `python main.py validate` na danych Twojego brokera da dodatni wynik na okresie kontrolnym po kosztach i przy rozsądnej liczbie transakcji.
@@ -114,6 +147,7 @@ cd goldbot
 research/download.sh ../dane                 # około 1 GB transferu, kilkanaście minut
 python -m research.study --broker ../dane/XAU_15m_data.csv --dukascopy ../dane/dukascopy_m15 --out ../wyniki
 python -m research.trend --broker ../dane/XAU_15m_data.csv --dukascopy ../dane/dukascopy_m15 --out ../wyniki
+python -m research.edges --broker ../dane/XAU_15m_data.csv --dukascopy ../dane/dukascopy_m15 --out ../wyniki
 ```
 
 Pełna siatka liczy się 10–15 minut na 4 rdzeniach.

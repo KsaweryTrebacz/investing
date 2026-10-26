@@ -1,0 +1,798 @@
+{
+ "broker_2008_2024": {
+  "variants": 466,
+  "buy_and_hold": {
+   "days": 4417,
+   "total_%": 35.3,
+   "cagr_%": 1.8,
+   "t_stat": 0.78,
+   "years_positive": "10/17",
+   "max_dd_%": -56.3
+  },
+  "walk_forward_all": {
+   "oos": {
+    "days": 3529,
+    "total_%": -9.3,
+    "cagr_%": -0.57,
+    "t_stat": 0.11,
+    "years_positive": "8/17",
+    "max_dd_%": -35.6
+   },
+   "chosen": [
+    {
+     "year": 2008,
+     "variant": "wybicie zakresu azjatyckiego LONG",
+     "train_mean_bp": 8.95
+    },
+    {
+     "year": 2009,
+     "variant": "momentum 20d LONG/flat",
+     "train_mean_bp": 6.32
+    },
+    {
+     "year": 2010,
+     "variant": "momentum 5d LONG/flat",
+     "train_mean_bp": 4.63
+    },
+    {
+     "year": 2011,
+     "variant": "momentum 20d LONG/flat",
+     "train_mean_bp": 4.8
+    },
+    {
+     "year": 2012,
+     "variant": "średnia 200d LONG/SHORT",
+     "train_mean_bp": 6.58
+    },
+    {
+     "year": 2013,
+     "variant": "momentum 20d LONG/flat",
+     "train_mean_bp": 3.9
+    },
+    {
+     "year": 2014,
+     "variant": "sesja 06-15 SHORT",
+     "train_mean_bp": 7.41
+    },
+    {
+     "year": 2015,
+     "variant": "sesja 06-15 SHORT",
+     "train_mean_bp": 6.44
+    },
+    {
+     "year": 2016,
+     "variant": "sesja 06-15 SHORT",
+     "train_mean_bp": 9.31
+    },
+    {
+     "year": 2017,
+     "variant": "wybicie zakresu azjatyckiego LONG/SHORT",
+     "train_mean_bp": 4.17
+    },
+    {
+     "year": 2018,
+     "variant": "momentum 5d LONG/SHORT",
+     "train_mean_bp": 5.12
+    },
+    {
+     "year": 2019,
+     "variant": "momentum 5d LONG/flat",
+     "train_mean_bp": 1.6
+    },
+    {
+     "year": 2020,
+     "variant": "momentum 250d LONG/flat",
+     "train_mean_bp": 1.73
+    },
+    {
+     "year": 2021,
+     "variant": "momentum 60d LONG/flat",
+     "train_mean_bp": 3.53
+    },
+    {
+     "year": 2022,
+     "variant": "RSI2<20 LONG/flat",
+     "train_mean_bp": 2.51
+    },
+    {
+     "year": 2023,
+     "variant": "wybicie zakresu azjatyckiego LONG",
+     "train_mean_bp": 1.83
+    },
+    {
+     "year": 2024,
+     "variant": "momentum 5d LONG/SHORT",
+     "train_mean_bp": 2.07
+    }
+   ]
+  },
+  "walk_forward_RSI2<10": {
+   "variants": 2,
+   "oos": {
+    "days": 1020,
+    "total_%": -19.3,
+    "cagr_%": -1.33,
+    "t_stat": -0.47,
+    "years_positive": "4/9",
+    "max_dd_%": -31.4
+   },
+   "chosen": [
+    "RSI2<10 LONG/flat",
+    "RSI2<10 LONG/SHORT",
+    "RSI2<10 LONG/SHORT",
+    "RSI2<10 LONG/SHORT",
+    "RSI2<10 LONG/flat",
+    "RSI2<10 LONG/flat",
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    "RSI2<10 LONG/SHORT",
+    "RSI2<10 LONG/flat",
+    "RSI2<10 LONG/flat",
+    null
+   ]
+  },
+  "walk_forward_RSI2<20": {
+   "variants": 2,
+   "oos": {
+    "days": 1006,
+    "total_%": -37.7,
+    "cagr_%": -2.91,
+    "t_stat": -1.18,
+    "years_positive": "1/8",
+    "max_dd_%": -43.6
+   },
+   "chosen": [
+    "RSI2<20 LONG/flat",
+    null,
+    null,
+    "RSI2<20 LONG/flat",
+    "RSI2<20 LONG/flat",
+    "RSI2<20 LONG/flat",
+    null,
+    "RSI2<20 LONG/SHORT",
+    null,
+    null,
+    null,
+    null,
+    null,
+    "RSI2<20 LONG/flat",
+    "RSI2<20 LONG/flat",
+    "RSI2<20 LONG/flat",
+    null
+   ]
+  },
+  "walk_forward_RSI2<5": {
+   "variants": 2,
+   "oos": {
+    "days": 706,
+    "total_%": -8.9,
+    "cagr_%": -0.58,
+    "t_stat": -0.17,
+    "years_positive": "3/10",
+    "max_dd_%": -26.7
+   },
+   "chosen": [
+    "RSI2<5 LONG/SHORT",
+    "RSI2<5 LONG/SHORT",
+    "RSI2<5 LONG/SHORT",
+    "RSI2<5 LONG/SHORT",
+    "RSI2<5 LONG/SHORT",
+    "RSI2<5 LONG/flat",
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    "RSI2<5 LONG/flat",
+    "RSI2<5 LONG/flat",
+    "RSI2<5 LONG/flat",
+    "RSI2<5 LONG/flat",
+    null
+   ]
+  },
+  "walk_forward_momentum": {
+   "variants": 12,
+   "oos": {
+    "days": 3400,
+    "total_%": -29.2,
+    "cagr_%": -2.01,
+    "t_stat": -0.28,
+    "years_positive": "9/17",
+    "max_dd_%": -49.6
+   },
+   "chosen": [
+    "momentum 250d LONG/flat",
+    "momentum 20d LONG/flat",
+    "momentum 5d LONG/flat",
+    "momentum 20d LONG/flat",
+    "momentum 120d LONG/flat",
+    "momentum 20d LONG/flat",
+    "momentum 250d LONG/SHORT",
+    "momentum 250d LONG/SHORT",
+    "momentum 250d LONG/SHORT",
+    "momentum 5d LONG/SHORT",
+    "momentum 5d LONG/SHORT",
+    "momentum 5d LONG/flat",
+    "momentum 250d LONG/flat",
+    "momentum 60d LONG/flat",
+    "momentum 60d LONG/flat",
+    "momentum 60d LONG/flat",
+    "momentum 5d LONG/SHORT"
+   ]
+  },
+  "walk_forward_sesja": {
+   "variants": 438,
+   "oos": {
+    "days": 4135,
+    "total_%": -51.2,
+    "cagr_%": -4.18,
+    "t_stat": -1.58,
+    "years_positive": "5/17",
+    "max_dd_%": -55.0
+   },
+   "chosen": [
+    "sesja 23-08 LONG",
+    "sesja 11-23 SHORT",
+    "sesja 01-07 LONG",
+    "sesja 01-07 LONG",
+    "sesja 01-10 LONG",
+    "sesja 09-15 SHORT",
+    "sesja 06-15 SHORT",
+    "sesja 06-15 SHORT",
+    "sesja 06-15 SHORT",
+    "sesja 07-15 SHORT",
+    "sesja 07-15 SHORT",
+    "sesja 01-13 LONG",
+    "sesja 07-18 LONG",
+    "sesja 07-18 LONG",
+    "sesja 01-09 LONG",
+    "sesja 05-09 LONG",
+    "sesja 03-15 SHORT"
+   ]
+  },
+  "walk_forward_wybicie": {
+   "variants": 2,
+   "oos": {
+    "days": 3227,
+    "total_%": 1.3,
+    "cagr_%": 0.08,
+    "t_stat": 0.27,
+    "years_positive": "8/15",
+    "max_dd_%": -27.5
+   },
+   "chosen": [
+    "wybicie zakresu azjatyckiego LONG",
+    "wybicie zakresu azjatyckiego LONG",
+    "wybicie zakresu azjatyckiego LONG",
+    null,
+    "wybicie zakresu azjatyckiego LONG",
+    "wybicie zakresu azjatyckiego LONG",
+    "wybicie zakresu azjatyckiego LONG/SHORT",
+    "wybicie zakresu azjatyckiego LONG/SHORT",
+    "wybicie zakresu azjatyckiego LONG/SHORT",
+    "wybicie zakresu azjatyckiego LONG/SHORT",
+    "wybicie zakresu azjatyckiego LONG/SHORT",
+    "wybicie zakresu azjatyckiego LONG/SHORT",
+    "wybicie zakresu azjatyckiego LONG",
+    "wybicie zakresu azjatyckiego LONG",
+    "wybicie zakresu azjatyckiego LONG",
+    "wybicie zakresu azjatyckiego LONG",
+    null
+   ]
+  },
+  "walk_forward_średnia": {
+   "variants": 8,
+   "oos": {
+    "days": 2509,
+    "total_%": -44.5,
+    "cagr_%": -3.4,
+    "t_stat": -0.94,
+    "years_positive": "6/14",
+    "max_dd_%": -60.2
+   },
+   "chosen": [
+    "średnia 200d LONG/flat",
+    "średnia 20d LONG/flat",
+    "średnia 20d LONG/flat",
+    "średnia 20d LONG/flat",
+    "średnia 200d LONG/SHORT",
+    "średnia 200d LONG/flat",
+    "średnia 200d LONG/SHORT",
+    null,
+    null,
+    null,
+    "średnia 20d LONG/SHORT",
+    "średnia 20d LONG/flat",
+    "średnia 20d LONG/flat",
+    "średnia 200d LONG/flat",
+    "średnia 100d LONG/flat",
+    "średnia 50d LONG/flat",
+    "średnia 50d LONG/SHORT"
+   ]
+  },
+  "top_full_period": {
+   "momentum 120d LONG/flat": {
+    "days": 2918,
+    "total_%": 54.7,
+    "cagr_%": 2.6,
+    "t_stat": 1.08,
+    "years_positive": "8/17",
+    "max_dd_%": -37.4
+   },
+   "momentum 5d LONG/flat": {
+    "days": 2829,
+    "total_%": 35.5,
+    "cagr_%": 1.8,
+    "t_stat": 0.85,
+    "years_positive": "9/17",
+    "max_dd_%": -34.0
+   },
+   "średnia 200d LONG/flat": {
+    "days": 2891,
+    "total_%": 31.3,
+    "cagr_%": 1.61,
+    "t_stat": 0.77,
+    "years_positive": "8/17",
+    "max_dd_%": -39.1
+   },
+   "średnia 100d LONG/flat": {
+    "days": 2752,
+    "total_%": 27.2,
+    "cagr_%": 1.43,
+    "t_stat": 0.72,
+    "years_positive": "9/17",
+    "max_dd_%": -40.6
+   },
+   "średnia 20d LONG/flat": {
+    "days": 2681,
+    "total_%": 26.7,
+    "cagr_%": 1.4,
+    "t_stat": 0.72,
+    "years_positive": "9/17",
+    "max_dd_%": -36.9
+   },
+   "momentum 20d LONG/flat": {
+    "days": 2619,
+    "total_%": 26.1,
+    "cagr_%": 1.37,
+    "t_stat": 0.71,
+    "years_positive": "10/17",
+    "max_dd_%": -40.0
+   },
+   "momentum 250d LONG/flat": {
+    "days": 2877,
+    "total_%": 20.8,
+    "cagr_%": 1.12,
+    "t_stat": 0.62,
+    "years_positive": "9/17",
+    "max_dd_%": -37.2
+   },
+   "wybicie zakresu azjatyckiego LONG/SHORT": {
+    "days": 4270,
+    "total_%": 17.7,
+    "cagr_%": 0.97,
+    "t_stat": 0.57,
+    "years_positive": "8/17",
+    "max_dd_%": -46.6
+   },
+   "średnia 50d LONG/flat": {
+    "days": 2544,
+    "total_%": 17.4,
+    "cagr_%": 0.95,
+    "t_stat": 0.57,
+    "years_positive": "9/17",
+    "max_dd_%": -42.9
+   },
+   "sesja 06-15 SHORT": {
+    "days": 4353,
+    "total_%": 15.9,
+    "cagr_%": 0.87,
+    "t_stat": 0.54,
+    "years_positive": "6/17",
+    "max_dd_%": -48.0
+   },
+   "sesja 07-15 SHORT": {
+    "days": 4362,
+    "total_%": 15.0,
+    "cagr_%": 0.83,
+    "t_stat": 0.53,
+    "years_positive": "7/17",
+    "max_dd_%": -48.0
+   },
+   "wybicie zakresu azjatyckiego LONG": {
+    "days": 3182,
+    "total_%": 1.7,
+    "cagr_%": 0.1,
+    "t_stat": 0.28,
+    "years_positive": "9/17",
+    "max_dd_%": -27.5
+   },
+   "momentum 120d LONG/SHORT": {
+    "days": 4417,
+    "total_%": 0.8,
+    "cagr_%": 0.05,
+    "t_stat": 0.36,
+    "years_positive": "9/17",
+    "max_dd_%": -44.7
+   },
+   "momentum 10d LONG/flat": {
+    "days": 2717,
+    "total_%": -1.8,
+    "cagr_%": -0.11,
+    "t_stat": 0.21,
+    "years_positive": "8/17",
+    "max_dd_%": -39.2
+   },
+   "sesja 01-06 LONG": {
+    "days": 4353,
+    "total_%": -3.1,
+    "cagr_%": -0.18,
+    "t_stat": -0.03,
+    "years_positive": "9/17",
+    "max_dd_%": -28.3
+   }
+  }
+ },
+ "dukascopy_2015_2018": {
+  "variants": 556,
+  "buy_and_hold": {
+   "days": 894,
+   "total_%": -9.0,
+   "cagr_%": -2.69,
+   "t_stat": -0.27,
+   "years_positive": "2/4",
+   "max_dd_%": -22.8
+  },
+  "walk_forward_all": {
+   "oos": {
+    "days": 885,
+    "total_%": 18.2,
+    "cagr_%": 4.94,
+    "t_stat": 0.97,
+    "years_positive": "2/4",
+    "max_dd_%": -19.0
+   },
+   "chosen": [
+    {
+     "year": 2015,
+     "variant": "wybicie zakresu azjatyckiego LONG/SHORT",
+     "train_mean_bp": 6.76
+    },
+    {
+     "year": 2016,
+     "variant": "sesja 06-15 SHORT",
+     "train_mean_bp": 8.66
+    },
+    {
+     "year": 2017,
+     "variant": "wybicie zakresu azjatyckiego LONG/SHORT",
+     "train_mean_bp": 3.38
+    },
+    {
+     "year": 2018,
+     "variant": "momentum 5d LONG/SHORT",
+     "train_mean_bp": 4.43
+    }
+   ]
+  },
+  "walk_forward_RSI2<10": {
+   "variants": 2,
+   "oos": {
+    "days": 0
+   },
+   "chosen": [
+    null,
+    null,
+    null,
+    null
+   ]
+  },
+  "walk_forward_RSI2<20": {
+   "variants": 2,
+   "oos": {
+    "days": 209,
+    "total_%": -12.2,
+    "cagr_%": -12.3,
+    "t_stat": -1.11,
+    "years_positive": "0/1",
+    "max_dd_%": -16.2
+   },
+   "chosen": [
+    "RSI2<20 LONG/SHORT",
+    null,
+    null,
+    null
+   ]
+  },
+  "walk_forward_RSI2<5": {
+   "variants": 2,
+   "oos": {
+    "days": 0
+   },
+   "chosen": [
+    null,
+    null,
+    null,
+    null
+   ]
+  },
+  "walk_forward_momentum": {
+   "variants": 12,
+   "oos": {
+    "days": 894,
+    "total_%": -21.1,
+    "cagr_%": -6.6,
+    "t_stat": -0.86,
+    "years_positive": "1/4",
+    "max_dd_%": -30.6
+   },
+   "chosen": [
+    "momentum 120d LONG/SHORT",
+    "momentum 250d LONG/SHORT",
+    "momentum 5d LONG/SHORT",
+    "momentum 5d LONG/SHORT"
+   ]
+  },
+  "walk_forward_sesja": {
+   "variants": 528,
+   "oos": {
+    "days": 810,
+    "total_%": 9.0,
+    "cagr_%": 2.76,
+    "t_stat": 0.59,
+    "years_positive": "1/4",
+    "max_dd_%": -19.8
+   },
+   "chosen": [
+    "sesja 06-15 SHORT",
+    "sesja 06-15 SHORT",
+    "sesja 07-15 SHORT",
+    "sesja 21-07 LONG"
+   ]
+  },
+  "walk_forward_wybicie": {
+   "variants": 2,
+   "oos": {
+    "days": 876,
+    "total_%": 30.5,
+    "cagr_%": 8.01,
+    "t_stat": 1.46,
+    "years_positive": "4/4",
+    "max_dd_%": -8.9
+   },
+   "chosen": [
+    "wybicie zakresu azjatyckiego LONG/SHORT",
+    "wybicie zakresu azjatyckiego LONG/SHORT",
+    "wybicie zakresu azjatyckiego LONG/SHORT",
+    "wybicie zakresu azjatyckiego LONG/SHORT"
+   ]
+  },
+  "walk_forward_średnia": {
+   "variants": 8,
+   "oos": {
+    "days": 61,
+    "total_%": -5.6,
+    "cagr_%": -11.76,
+    "t_stat": -1.1,
+    "years_positive": "0/1",
+    "max_dd_%": -9.1
+   },
+   "chosen": [
+    null,
+    null,
+    null,
+    "średnia 20d LONG/flat"
+   ]
+  },
+  "top_full_period": {
+   "wybicie zakresu azjatyckiego LONG/SHORT": {
+    "days": 876,
+    "total_%": 30.5,
+    "cagr_%": 8.01,
+    "t_stat": 1.46,
+    "years_positive": "4/4",
+    "max_dd_%": -8.9
+   },
+   "momentum 5d LONG/SHORT": {
+    "days": 894,
+    "total_%": 29.1,
+    "cagr_%": 7.66,
+    "t_stat": 1.18,
+    "years_positive": "3/4",
+    "max_dd_%": -15.9
+   },
+   "momentum 5d LONG/flat": {
+    "days": 530,
+    "total_%": 15.8,
+    "cagr_%": 4.32,
+    "t_stat": 0.94,
+    "years_positive": "2/4",
+    "max_dd_%": -10.2
+   },
+   "sesja 07-15 SHORT": {
+    "days": 891,
+    "total_%": 14.9,
+    "cagr_%": 4.09,
+    "t_stat": 0.89,
+    "years_positive": "3/4",
+    "max_dd_%": -17.5
+   },
+   "sesja 06-15 SHORT": {
+    "days": 892,
+    "total_%": 14.6,
+    "cagr_%": 4.02,
+    "t_stat": 0.86,
+    "years_positive": "2/4",
+    "max_dd_%": -19.8
+   },
+   "sesja 21-07 LONG": {
+    "days": 302,
+    "total_%": 10.7,
+    "cagr_%": 3.26,
+    "t_stat": 1.54,
+    "years_positive": "2/4",
+    "max_dd_%": -6.9
+   },
+   "sesja 21-06 LONG": {
+    "days": 302,
+    "total_%": 10.0,
+    "cagr_%": 3.04,
+    "t_stat": 1.48,
+    "years_positive": "3/4",
+    "max_dd_%": -5.3
+   },
+   "sesja 07-16 SHORT": {
+    "days": 892,
+    "total_%": 8.8,
+    "cagr_%": 2.48,
+    "t_stat": 0.55,
+    "years_positive": "2/4",
+    "max_dd_%": -18.5
+   },
+   "sesja 06-16 SHORT": {
+    "days": 892,
+    "total_%": 8.6,
+    "cagr_%": 2.41,
+    "t_stat": 0.53,
+    "years_positive": "2/4",
+    "max_dd_%": -20.5
+   },
+   "sesja 06-18 SHORT": {
+    "days": 877,
+    "total_%": 8.1,
+    "cagr_%": 2.27,
+    "t_stat": 0.48,
+    "years_positive": "2/4",
+    "max_dd_%": -21.7
+   },
+   "sesja 07-14 SHORT": {
+    "days": 892,
+    "total_%": 7.8,
+    "cagr_%": 2.2,
+    "t_stat": 0.58,
+    "years_positive": "2/4",
+    "max_dd_%": -14.5
+   },
+   "sesja 06-14 SHORT": {
+    "days": 892,
+    "total_%": 7.6,
+    "cagr_%": 2.14,
+    "t_stat": 0.55,
+    "years_positive": "2/4",
+    "max_dd_%": -16.4
+   },
+   "sesja 07-18 SHORT": {
+    "days": 877,
+    "total_%": 7.4,
+    "cagr_%": 2.1,
+    "t_stat": 0.46,
+    "years_positive": "2/4",
+    "max_dd_%": -19.2
+   },
+   "sesja 07-17 SHORT": {
+    "days": 889,
+    "total_%": 7.3,
+    "cagr_%": 2.05,
+    "t_stat": 0.46,
+    "years_positive": "2/4",
+    "max_dd_%": -18.6
+   },
+   "sesja 06-17 SHORT": {
+    "days": 889,
+    "total_%": 7.2,
+    "cagr_%": 2.04,
+    "t_stat": 0.45,
+    "years_positive": "2/4",
+    "max_dd_%": -20.7
+   }
+  }
+ },
+ "cross_check_dukascopy_2011_2018": {
+  "momentum 5d LONG/SHORT": {
+   "days": 1832,
+   "total_%": 17.7,
+   "cagr_%": 2.32,
+   "t_stat": 0.6,
+   "years_positive": "4/8",
+   "max_dd_%": -30.4
+  },
+  "momentum 5d LONG/flat": {
+   "days": 1099,
+   "total_%": -1.5,
+   "cagr_%": -0.22,
+   "t_stat": 0.09,
+   "years_positive": "3/8",
+   "max_dd_%": -30.9
+  },
+  "średnia 50d LONG/SHORT": {
+   "days": 1788,
+   "total_%": -46.1,
+   "cagr_%": -8.32,
+   "t_stat": -1.25,
+   "years_positive": "2/8",
+   "max_dd_%": -55.8
+  },
+  "średnia 20d LONG/SHORT": {
+   "days": 1818,
+   "total_%": -19.5,
+   "cagr_%": -3.0,
+   "t_stat": -0.3,
+   "years_positive": "2/8",
+   "max_dd_%": -40.8
+  },
+  "średnia 50d LONG/flat": {
+   "days": 851,
+   "total_%": -34.7,
+   "cagr_%": -5.81,
+   "t_stat": -1.42,
+   "years_positive": "1/8",
+   "max_dd_%": -44.5
+  },
+  "średnia 20d LONG/flat": {
+   "days": 1004,
+   "total_%": -19.7,
+   "cagr_%": -3.05,
+   "t_stat": -0.64,
+   "years_positive": "2/8",
+   "max_dd_%": -36.1
+  },
+  "momentum 20d LONG/flat": {
+   "days": 939,
+   "total_%": -28.3,
+   "cagr_%": -4.57,
+   "t_stat": -1.03,
+   "years_positive": "3/8",
+   "max_dd_%": -39.9
+  },
+  "sesja 03-15 SHORT": {
+   "days": 1833,
+   "total_%": 70.0,
+   "cagr_%": 7.76,
+   "t_stat": 1.82,
+   "years_positive": "5/8",
+   "max_dd_%": -22.5
+  },
+  "momentum 20d LONG/SHORT": {
+   "days": 1817,
+   "total_%": -36.2,
+   "cagr_%": -6.12,
+   "t_stat": -0.84,
+   "years_positive": "1/8",
+   "max_dd_%": -49.5
+  },
+  "sesja 07-18 SHORT": {
+   "days": 1803,
+   "total_%": 41.7,
+   "cagr_%": 5.03,
+   "t_stat": 1.17,
+   "years_positive": "4/8",
+   "max_dd_%": -19.2
+  }
+ }
+}
