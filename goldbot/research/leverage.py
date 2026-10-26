@@ -22,7 +22,6 @@ import backtest
 from pipeline import prepare
 from research import edges as E
 from research.datasets import daily_from_m15, hourly_spread_profile, load_broker_m15, load_dukascopy
-from research.study import STUDY_COSTS
 from strategy import Params
 
 NY = "America/New_York"
