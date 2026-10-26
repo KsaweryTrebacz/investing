@@ -56,3 +56,12 @@ def test_unvalidated_strategy_is_only_watch():
     assert v["decision"] == WATCH and v["verdict"] == "CZEKAJ" and v["held"] == "KUP"
     assert "potwierdzonej przewagi" in v["decision_reasons"][-1]
     assert finalize(wait(), None, PF_OK, [], 2, validated=False)["decision"] == WATCH  # bez sygnału bez zmian
+
+
+def test_margin_and_liquidation_blocks_are_hard():
+    no_margin = {**PLAN, "free_margin": -10.0, "margin": 600.0, "leverage": 60.0, "max_leverage": 50.0}
+    v = finalize(TRADE, no_margin, PF_OK, [], 2)
+    assert v["decision"] == NO_TRADE and "wolnego depozytu" in v["decision_reasons"][0]
+    liq = {**PLAN, "free_margin": 100.0, "sl_beyond_liquidation": True, "liquidation_price": 1995.0, "sl": 1990.0}
+    v = finalize(TRADE, liq, PF_OK, [], 2)
+    assert v["decision"] == NO_TRADE and "zlikwidowałby" in v["decision_reasons"][0]

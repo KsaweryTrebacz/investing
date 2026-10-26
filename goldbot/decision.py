@@ -28,6 +28,12 @@ def risk_blocks(plan: dict, portfolio: dict, near: list, guard_hours: float) -> 
     elif plan["units"] <= 0:
         hard.append(f"Ryzyko {plan['risk_per_trade']:.1%} kapitału ({plan['budget']:.2f} {plan['currency']}) "
                     "nie wystarcza na minimalną wielkość pozycji przy tym SL i kosztach.")
+    elif plan.get("free_margin") is not None and plan["free_margin"] < 0:
+        hard.append(f"Brak wolnego depozytu: pozycja wymaga {plan['margin']:.2f} {plan['currency']} przy dźwigni "
+                    f"{plan['leverage']:.1f}:1 (maks. {plan['max_leverage']:.0f}:1).")
+    elif plan.get("sl_beyond_liquidation"):
+        hard.append(f"Broker zlikwidowałby pozycję przy cenie {plan['liquidation_price']:.2f}, zanim cena dojdzie "
+                    f"do SL {plan['sl']:.2f}.")
     if portfolio["exceeded"]:
         hard += [r for r in portfolio["reasons"] if "przekracza limit" in r]
     elif portfolio["ok"] is not True:

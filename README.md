@@ -45,6 +45,7 @@ Raport widać w konsoli, na dashboardzie i w Telegramie. Nagłówek podaje źró
 
 ## Koszty i ryzyko
 
+- Dźwignia: stopa depozytu instrumentu (1:50 → `margin_rate: 0.02`). Raport pokazuje użytą dźwignię, wolny depozyt i cenę, przy której broker zlikwiduje pozycję (kapitał poniżej `margin_closeout` × depozyt, domyślnie 50%). Brak wolnego depozytu albo SL dalej niż poziom likwidacji to brak transakcji.
 - Ryzyko na transakcję domyślnie 0,5% kapitału. Wielkość pozycji jest taka, żeby strata przy SL razem ze znanymi kosztami i poślizgiem nie przekroczyła tego budżetu.
 - Koszty: spread (z cen bid/ask), prowizja w obie strony, finansowanie za noc (rollover 17:00 w Nowym Jorku, potrójne naliczenie w konfigurowalny dzień, domyślnie środa), poślizg na SL, przewalutowanie, korekta dywidendowa dla CFD na akcje. Każdy brakujący składnik jest wypisany, a wynik oznaczony jako orientacyjny.
 - Czas utrzymania: mediana z co najmniej 10 rozliczonych rad, inaczej górna granica 48 h.
@@ -120,7 +121,7 @@ Formaty odpowiedzi FRED (kalendarz) i Alpha Vantage są przyjęte z dokumentacji
 
 ## Badania na danych historycznych
 
-`goldbot/research/` testuje strategię na publicznych notowaniach złota: pobranie danych (`download.sh`), przeliczenie czasu serwera na UTC, model spreadu z prawdziwych bid/ask Dukascopy, optymalizacja walk-forward (`study.py`), Monte Carlo ryzyka utraty kapitału, porównanie z losowymi wejściami, alternatywna strategia trendowa na D1 (`trend.py`) oraz inne rodziny strategii bez ograniczeń ryzyka: sesje, momentum, średnie, RSI(2), wybicia (`edges.py`). Wyniki i wnioski: `docs/research/`.
+`goldbot/research/` testuje strategię na publicznych notowaniach złota: pobranie danych (`download.sh`), przeliczenie czasu serwera na UTC, model spreadu z prawdziwych bid/ask Dukascopy, optymalizacja walk-forward (`study.py`), Monte Carlo ryzyka utraty kapitału, porównanie z losowymi wejściami, alternatywna strategia trendowa na D1 (`trend.py`) oraz inne rodziny strategii bez ograniczeń ryzyka: sesje, momentum, średnie, RSI(2), wybicia (`edges.py`) oraz symulacja rachunku CFD z dźwignią do 1:50 i likwidacją przez brokera (`leverage.py`). Wyniki i wnioski: `docs/research/`.
 
 Filtry strategii (sesja, zgodność EMA 20/50, zapas do szczytu lub dołka, wyłączenie reżimu) ustawia się w `config.json` w sekcji `strategy` instrumentu; domyślnie są wyłączone. `strategy_validated: true` ustaw dopiero wtedy, gdy `validate` na danych Twojego brokera da dodatni wynik na okresie kontrolnym po kosztach.
 

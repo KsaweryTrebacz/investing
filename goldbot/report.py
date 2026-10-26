@@ -55,8 +55,9 @@ def build_report(*, instrument: str, v: dict, facts: dict, rows: list, plan: dic
     d1_atr = facts["d1"]["atr"]
     pnl = None
     if plan:
-        pnl = {k: plan[k] for k in ("units", "loss", "gain", "margin", "notional", "budget", "currency", "fx",
-                                     "exact", "missing", "risk_per_trade")}
+        pnl = {k: plan.get(k) for k in ("units", "loss", "gain", "margin", "notional", "budget", "currency", "fx",
+                                         "exact", "missing", "risk_per_trade", "leverage", "max_leverage",
+                                         "liquidation_price", "liquidation_move", "free_margin")}
         pnl["loss_pct"] = plan["loss"] / account.capital if plan["loss"] is not None else None
     return {
         "instrument": instrument, "currency": account.currency, "time": v["time"], "generated_at": pd.Timestamp(now).isoformat(),
@@ -161,6 +162,12 @@ def render_text(r: dict) -> str:
                      f"{m['risk_per_trade']:.1%} = {_money(m['budget'], cur)}), zysk przy TP po kosztach ok. "
                      f"{_money(m['gain'], cur)}, depozyt {_money(m['margin'], cur)}, wartość {_money(m['notional'], cur)}; "
                      f"kurs {fx['rate']:.4f} ({fx['source']}{', ' + str(fx['as_of']) if fx.get('as_of') else ''}).")
+            if m.get("leverage") is not None:
+                L.append(f"   Dźwignia: {m['leverage']:.1f}:1 z dostępnych {m['max_leverage']:.0f}:1; wolny depozyt po "
+                         f"otwarciu {_money(m['free_margin'], cur)}; broker zlikwiduje pozycję przy cenie "
+                         f"{m['liquidation_price']:.2f} (ruch {m['liquidation_move']:+.1%} od wejścia).")
+            else:
+                L.append("   Dźwignia i poziom likwidacji: nieznane (brak stopy depozytu w konfiguracji).")
     else:
         L.append("6. Zysk i strata: nie dotyczy, brak planu transakcji.")
     pf = r["portfolio"]

@@ -115,3 +115,37 @@ def test_load_positions(tmp_path):
     p.write_text(json.dumps({"as_of": "x"}), encoding="utf-8")
     assert load_positions(str(p)) == {"as_of": "x", "positions": []}
     assert load_positions(str(tmp_path / "brak.json")) is None
+
+
+def test_liquidation_price_long_short_and_other_margin():
+    from risk import liquidation_price
+    # 1 jedn. po 100, kapitał 2 (dźwignia 50:1), depozyt 2%, likwidacja przy 50% depozytu
+    p = liquidation_price(1, 100.0, 1.0, 2.0, 0.02, 0.5)
+    assert abs((2.0 + (p - 100.0)) - 0.5 * 0.02 * p) < 1e-9 and 98.9 < p < 99.0
+    p = liquidation_price(-1, 100.0, 1.0, 2.0, 0.02, 0.5)
+    assert abs((2.0 - (p - 100.0)) - 0.5 * 0.02 * p) < 1e-9 and 100.9 < p < 101.0
+    assert liquidation_price(1, 100.0, 1.0, 2.0, 0.02, 0.5, other_margin=1.0) > p - 2  # inne pozycje przybliżają likwidację
+
+
+def test_plan_reports_leverage_and_liquidation_at_1_to_50():
+    i = instr(margin_rate=0.02)
+    p = plan_trade(BUY, i, ACC, FX, HOLD, NOW)
+    assert abs(p["leverage"] - 0.8) < 1e-9 and p["max_leverage"] == 50 and abs(p["margin"] - 160.0) < 1e-9
+    assert p["liquidation_move"] < -0.5 and not p["sl_beyond_liquidation"]  # przy ryzyku 0,5% likwidacja jest daleko
+    big = plan_trade(BUY, i, Account(currency="PLN", capital=10_000, risk_per_trade=0.9), FX, HOLD, NOW)
+    assert big["leverage"] > 50 and big["free_margin"] < 0       # 90% ryzyka: pozycja większa niż pozwala depozyt
+
+
+def test_sl_beyond_liquidation_is_detected():
+    far = {"verdict": "KUP", "entry": 2000.0, "sl": 1900.0, "tp": 2200.0, "atr": 100 / 1.5}
+    p = plan_trade(far, instr(margin_rate=0.02), Account(currency="USD", capital=10_000, risk_per_trade=0.95),
+                   {"rate": 1.0, "source": "t", "as_of": None}, HOLD, NOW)
+    assert p["leverage"] < 50 and p["sl_beyond_liquidation"] and p["liquidation_price"] > 1900.0
+
+
+def test_positions_margin():
+    from risk import positions_margin
+    c = cfg()
+    c.instruments["XAU_USD"].costs = Costs(margin_rate=0.02)
+    total, unknown = positions_margin(c, POS)
+    assert abs(total - 2 * 2000 * 0.02) < 1e-9 and unknown == ["SPX500_USD"]

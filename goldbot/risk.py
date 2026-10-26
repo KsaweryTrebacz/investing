@@ -32,8 +32,20 @@ def fx_rate(cfg: Config, quote: str, live: dict | None = None) -> dict | None:
     return None
 
 
+def liquidation_price(side: int, entry: float, units_acct: float, equity: float, margin_rate: float,
+                      closeout: float, other_margin: float = 0.0) -> float:
+    """Cena, przy której kapitał rachunku spada do `closeout` x depozyt (broker zamyka pozycje).
+
+    units_acct: zmiana wyniku w walucie rachunku na 1 jednostkę ceny (jednostki x kurs);
+    other_margin: depozyt innych otwartych pozycji (zakłada się, że ich wynik się nie zmienia).
+    """
+    if side == 1:   # equity + u(P - entry) = c (other + m u P)
+        return (units_acct * entry - equity + closeout * other_margin) / (units_acct * (1 - closeout * margin_rate))
+    return (equity + units_acct * entry - closeout * other_margin) / (units_acct * (1 + closeout * margin_rate))
+
+
 def plan_trade(v: dict, instr: Instrument, account: Account, fx: dict | None, holding: dict, now,
-               dividend: dict | None = None) -> dict:
+               dividend: dict | None = None, other_margin: float = 0.0) -> dict:
     """Plan dla werdyktu handlowego: jednostki, strata przy SL i zysk przy TP po kosztach, depozyt.
 
     Wielkość pozycji jest taka, żeby strata przy SL razem ze znanymi kosztami i poślizgiem
@@ -77,8 +89,13 @@ def plan_trade(v: dict, instr: Instrument, account: Account, fx: dict | None, ho
     units = math.floor(budget / (loss_pu * rate) / step + 1e-9) * step
     plan.update(budget=budget, units=units, loss=units * loss_pu * rate, gain=units * gain_pu * rate,
                 notional=units * entry * rate)
-    if instr.costs.margin_rate is not None:
-        plan["margin"] = units * entry * instr.costs.margin_rate * rate
+    m = instr.costs.margin_rate
+    if m is not None and units > 0:
+        plan["margin"] = units * entry * m * rate
+        liq = liquidation_price(side, entry, units * rate, account.capital, m, account.margin_closeout, other_margin)
+        plan.update(leverage=plan["notional"] / account.capital, max_leverage=1 / m, other_margin=other_margin,
+                    free_margin=account.capital - other_margin - plan["margin"], liquidation_price=liq,
+                    liquidation_move=(liq - entry) / entry, sl_beyond_liquidation=side * (sl - liq) <= 0)
     return plan
 
 
@@ -104,6 +121,19 @@ def position_risk(p: dict, cfg: Config, fx_live: dict | None = None) -> float | 
     if fx is None:
         return None
     return float(p["units"]) * max(0.0, _side(p) * (p["entry"] - p["sl"])) * fx["rate"]
+
+
+def positions_margin(cfg: Config, positions: dict | None, fx_live: dict | None = None) -> tuple[float, list]:
+    """Depozyt zajęty przez otwarte pozycje w walucie rachunku i lista pozycji, dla których jest nieznany."""
+    total, unknown = 0.0, []
+    for p in (positions or {}).get("positions", []):
+        instr = cfg.instrument(p["instrument"])
+        fx = fx_rate(cfg, instr.quote, fx_live)
+        if instr.costs.margin_rate is None or fx is None:
+            unknown.append(p["instrument"])
+            continue
+        total += float(p["units"]) * p["entry"] * instr.costs.margin_rate * fx["rate"]
+    return total, unknown
 
 
 def portfolio_check(new_loss: float | None, instrument: str, cfg: Config, positions: dict | None,

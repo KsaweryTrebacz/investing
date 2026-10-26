@@ -15,7 +15,7 @@ from notify import format_message, should_notify, should_store
 from pipeline import prepare
 from report import build_report
 from resolve import resolve
-from risk import fx_rate, plan_trade, portfolio_check
+from risk import fx_rate, plan_trade, portfolio_check, positions_margin
 from strategy import Params
 
 MIN_D1 = 200
@@ -72,7 +72,7 @@ def run_cycle(m15, d1, usd, yld, store, send=None, p: Params | None = None, now=
     if v["verdict"] in TRADE:
         held = upcoming(mine, now, holding["hours"], ctx.instrument, instr.symbol)
         plan = plan_trade(v, instr, cfg.account, fx_rate(cfg, instr.quote, ctx.fx_live), holding, now,
-                          dividend=dividend_in(held))
+                          dividend=dividend_in(held), other_margin=positions_margin(cfg, ctx.positions, ctx.fx_live)[0])
     portfolio = portfolio_check(plan["loss"] if plan else None, ctx.instrument, cfg, ctx.positions, ctx.fx_live)
     v = finalize(v, plan, portfolio, near_now(mine, now, guard_hours), guard_hours, instr.strategy_validated)
 

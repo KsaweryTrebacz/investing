@@ -2,12 +2,13 @@
   "_opis": "Skopiuj jako config.json i uzupełnij. null = brak danych: raport to wypisze, a wynik będzie orientacyjny. Klucze zaczynające się od _ są komentarzami.",
 
   "account": {
-    "_opis": "capital = wartość rachunku w walucie rachunku. risk_per_trade 0.005 = 0,5% kapitału. Limity portfela to założenia robocze.",
+    "_opis": "capital = wartość rachunku w walucie rachunku. risk_per_trade 0.005 = 0,5% kapitału. Limity portfela to założenia robocze. margin_closeout: broker zamyka pozycje, gdy kapitał spadnie poniżej tej części depozytu (0.5 = 50%, zasada ESMA).",
     "currency": "PLN",
     "capital": null,
     "risk_per_trade": 0.005,
     "max_total_risk": 0.02,
-    "max_group_risk": 0.01
+    "max_group_risk": 0.01,
+    "margin_closeout": 0.5
   },
 
   "fx_rates": {
@@ -39,7 +40,8 @@
         "_opis": "Dane z tabeli opłat brokera, w walucie kwotowania (USD). Stopy jako ułamki. Finansowanie jak w OANDA: ujemne = płacisz.",
         "source": null,
         "as_of": null,
-        "margin_rate": null,
+        "_margin_opis": "Dźwignia 1:50 -> margin_rate 0.02. W UE limit dla klienta detalicznego na złocie to 1:20 (0.05); sprawdź w tabeli brokera.",
+        "margin_rate": 0.02,
         "commission_per_unit": null,
         "commission_rate": null,
         "financing_long_rate": null,

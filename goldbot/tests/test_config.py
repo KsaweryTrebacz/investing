@@ -60,6 +60,7 @@ def test_example_files_are_valid():
     from risk import load_positions
     cfg = load_config(os.path.join(HERE, "config.example.json"))
     assert list(cfg.instruments) == ["XAU_USD"] and cfg.account.risk_per_trade == 0.005
-    assert cfg.instruments["XAU_USD"].costs.margin_rate is None and cfg.events["fred_releases"] == [10]
+    assert cfg.instruments["XAU_USD"].costs.margin_rate == 0.02 and cfg.events["fred_releases"] == [10]
+    assert cfg.account.margin_closeout == 0.5
     assert load_positions(os.path.join(HERE, "positions.example.json"))["positions"] == []
     assert load_csv_events(os.path.join(HERE, "events.example.csv"), "2026-10-23") == []

@@ -1,7 +1,7 @@
 # Optymalizacja i testy skuteczności na publicznych danych złota
 
-Data: 2026-10-26. Wyniki surowe: `docs/research/wyniki/` (study.json, trend.json, edges.json, grid_full_period.csv.gz).
-Kod: `goldbot/research/` (datasets.py, study.py, trend.py, edges.py, download.sh).
+Data: 2026-10-26. Wyniki surowe: `docs/research/wyniki/` (study.json, trend.json, edges.json, leverage.json, grid_full_period.csv.gz).
+Kod: `goldbot/research/` (datasets.py, study.py, trend.py, edges.py, leverage.py, download.sh).
 
 ## Wniosek
 
@@ -127,11 +127,36 @@ Strategie dzienne a koszt finansowania (BaseMax 2008–2024, roczne tempo wzrost
 
 Filtry trendu nie dają wyższego zwrotu niż samo trzymanie złota, tylko mniejsze spadki. Przy CFD koszt finansowania zjada większość zysku. Bez ograniczeń ryzyka najwyższy zwrot w badanym okresie dawało więc trzymanie złota bez dźwigni i bez finansowania (np. fizyczne złoto albo fundusz), a nie strategia transakcyjna. Dźwignia mnoży zarówno ten zwrot, jak i spadki (−45% bez dźwigni).
 
+### 9. Dźwignia CFD 1:50 (research/leverage.py)
+
+Symulacja rachunku: pozycja = dźwignia x kapitał, depozyt 2% wartości (1:50), likwidacja przez brokera, gdy kapitał spadnie poniżej 50% depozytu. Likwidację sprawdzano na najgorszej cenie dnia albo transakcji, przy luce po cenie otwarcia. Finansowanie liczone od całej wartości pozycji, kapitał nie spada poniżej zera, po likwidacji strategia wchodzi ponownie pozostałym kapitałem. Przy pełnej dźwigni 50:1 likwidacja następuje już po ruchu ceny o około 1%. Okna 4-miesięczne zaczynają się co miesiąc w latach 2008–2024 (około 200 okien).
+
+| Strategia | Dźwignia | Kapitał końcowy 2008–2024 (start = 1) | Okna 4 mies.: mediana | P(strata) | P(+80%) | P(−50%) | P(wyzerowanie) |
+|---|---|---|---|---|---|---|---|
+| Kup i trzymaj | 1x | 1,61 | +1% | 45% | 0% | 0% | 0% |
+| Kup i trzymaj | 2x | 2,22 (spadek −94%) | +3% | 45% | 0% | 0% | 0% |
+| Kup i trzymaj | 5x | 0,01 (wyzerowany 11.2015) | +5% | 45% | 3% | 8% | 0% |
+| Kup i trzymaj | 20x | 0,007 (wyzerowany 09.2008) | −52% | 64% | 26% | 52% | 14% |
+| Kup i trzymaj | 50x | 0,007 (wyzerowany 08.2008) | −79% | 75% | 17% | 64% | 35% |
+| Momentum 120 dni, LONG albo bez pozycji | 5x | 2,00 (spadek −89%) | +2% | 47% | 2% | 3% | 0% |
+| Momentum 120 dni, LONG albo bez pozycji | 50x | 0,006 (wyzerowany 01.2009) | −73% | 74% | 18% | 60% | 18% |
+| SHORT 07–15 UTC (Londyn) | 50x | 0,008 (wyzerowany 01.2008) | −99% | 90% | 7% | 88% | 57% |
+| Strategia doradcy M15 | 1x | 0,68 | −1% | 71% | 0% | 0% | 0% |
+| Strategia doradcy M15 | 50x | 0,01 (wyzerowany 10.2008) | −49% | 87% | 4% | 49% | 1% |
+
+Pełne wyniki dla dźwigni 1, 2, 5, 10, 20 i 50: `docs/research/wyniki/leverage.json`.
+
+- Przy dźwigni od około 5x każda strategia, także trzymanie rosnącego złota, w latach 2008–2024 traci prawie cały kapitał. Wystarcza do tego jedno silne tąpnięcie (2008, 2013) i finansowanie liczone od całej wartości pozycji.
+- Najwyższy kapitał końcowy dało trzymanie złota przy 2x (2,2 raza w 17 lat), przy spadku po drodze −94%. Powyżej tej wielkości wynik długoterminowy spada, bo zmienność i koszt finansowania rosną razem z dźwignią szybciej niż zysk.
+- W horyzoncie 4 miesięcy duża dźwignia działa jak loteria. Przy 20x trzymanie złota dało +80% w 26% okien, ale w 52% okien stratę ponad połowy kapitału i w 14% wyzerowanie rachunku. Przy 50x mediana to −79%.
+- W UE limit dźwigni na złocie dla klienta detalicznego to 1:20 (ESMA). Dźwignia 1:50 oznacza rachunek profesjonalny albo brokera spoza tych zasad.
+
 ## Zmiany w programie
 
 - `strategy_validated` w konfiguracji instrumentu (domyślnie `false`): sygnał M15 daje najwyżej „obserwację”, a plan jest pokazany jako wstrzymany, z odnośnikiem do tego raportu. Zmienić na `true` można dopiero, gdy `python main.py validate` na danych Twojego brokera da dodatni wynik na okresie kontrolnym po kosztach i przy rozsądnej liczbie transakcji.
 - Filtry jakości (sesja, EMA 20/50, zapas do szczytu lub dołka, wyłączenie reżimu) są dostępne w sekcji `strategy` konfiguracji, domyślnie wyłączone. Żaden nie dał poprawy poza próbą.
 - Parametry domyślne strategii bez zmian: żaden wariant nie był lepszy w sposób powtarzalny.
+- Dźwignia: raport pokazuje użytą dźwignię, wolny depozyt i cenę likwidacji przez brokera. Brak wolnego depozytu albo SL dalej niż poziom likwidacji blokuje radę. Przy ryzyku 0,5% na transakcję pozycja zwykle ma dźwignię kilka do 1, a likwidacja wypada kilkadziesiąt procent od ceny wejścia.
 
 ## Ograniczenia
 
@@ -148,6 +173,7 @@ research/download.sh ../dane                 # około 1 GB transferu, kilkanaśc
 python -m research.study --broker ../dane/XAU_15m_data.csv --dukascopy ../dane/dukascopy_m15 --out ../wyniki
 python -m research.trend --broker ../dane/XAU_15m_data.csv --dukascopy ../dane/dukascopy_m15 --out ../wyniki
 python -m research.edges --broker ../dane/XAU_15m_data.csv --dukascopy ../dane/dukascopy_m15 --out ../wyniki
+python -m research.leverage --broker ../dane/XAU_15m_data.csv --dukascopy ../dane/dukascopy_m15 --out ../wyniki
 ```
 
 Pełna siatka liczy się 10–15 minut na 4 rdzeniach.

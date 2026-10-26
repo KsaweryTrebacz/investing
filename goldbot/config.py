@@ -18,6 +18,7 @@ class Account:
     risk_per_trade: float = 0.005  # 0,5% kapitału na transakcję
     max_total_risk: float = 0.02   # łączne ryzyko otwartych pozycji (założenie)
     max_group_risk: float = 0.01   # ryzyko w jednej grupie lub sektorze (założenie)
+    margin_closeout: float = 0.5   # broker zamyka pozycje, gdy kapitał < 50% depozytu (zasada ESMA)
 
 
 @dataclass

@@ -1,0 +1,478 @@
+{
+ "margin_rate": 0.02,
+ "closeout": 0.5,
+ "leverages": [
+  1,
+  2,
+  5,
+  10,
+  20,
+  50
+ ],
+ "results": {
+  "kup i trzymaj": {
+   "1x": {
+    "2008-2024": {
+     "final_x": 1.608,
+     "cagr_%": 2.8,
+     "max_dd_%": -70.5,
+     "stopouts": 0,
+     "ruined": null
+    },
+    "okna_4m": {
+     "windows": 204,
+     "median_%": 1.2,
+     "P(strata)_%": 44.6,
+     "P(-50%)_%": 0.0,
+     "P(wyzerowanie)_%": 0.0,
+     "P(likwidacja)_%": 0.0,
+     "P(+80%)_%": 0.0,
+     "best_%": 28.2
+    }
+   },
+   "2x": {
+    "2008-2024": {
+     "final_x": 2.216,
+     "cagr_%": 4.8,
+     "max_dd_%": -94.4,
+     "stopouts": 0,
+     "ruined": null
+    },
+    "okna_4m": {
+     "windows": 204,
+     "median_%": 2.5,
+     "P(strata)_%": 44.6,
+     "P(-50%)_%": 0.0,
+     "P(wyzerowanie)_%": 0.0,
+     "P(likwidacja)_%": 0.0,
+     "P(+80%)_%": 0.0,
+     "best_%": 56.5
+    }
+   },
+   "5x": {
+    "2008-2024": {
+     "final_x": 0.01,
+     "cagr_%": -23.7,
+     "max_dd_%": -99.4,
+     "stopouts": 1,
+     "ruined": "2015-11-12"
+    },
+    "okna_4m": {
+     "windows": 204,
+     "median_%": 5.3,
+     "P(strata)_%": 45.1,
+     "P(-50%)_%": 8.3,
+     "P(wyzerowanie)_%": 0.0,
+     "P(likwidacja)_%": 3.9,
+     "P(+80%)_%": 2.9,
+     "best_%": 141.2
+    }
+   },
+   "10x": {
+    "2008-2024": {
+     "final_x": 0.008,
+     "cagr_%": -24.5,
+     "max_dd_%": -99.7,
+     "stopouts": 2,
+     "ruined": "2008-09-11"
+    },
+    "okna_4m": {
+     "windows": 204,
+     "median_%": 7.8,
+     "P(strata)_%": 47.1,
+     "P(-50%)_%": 29.9,
+     "P(wyzerowanie)_%": 4.4,
+     "P(likwidacja)_%": 26.5,
+     "P(+80%)_%": 17.2,
+     "best_%": 282.3
+    }
+   },
+   "20x": {
+    "2008-2024": {
+     "final_x": 0.007,
+     "cagr_%": -25.3,
+     "max_dd_%": -99.8,
+     "stopouts": 3,
+     "ruined": "2008-09-10"
+    },
+    "okna_4m": {
+     "windows": 204,
+     "median_%": -51.9,
+     "P(strata)_%": 64.2,
+     "P(-50%)_%": 51.5,
+     "P(wyzerowanie)_%": 14.2,
+     "P(likwidacja)_%": 60.3,
+     "P(+80%)_%": 26.0,
+     "best_%": 564.6
+    }
+   },
+   "50x": {
+    "2008-2024": {
+     "final_x": 0.007,
+     "cagr_%": -25.4,
+     "max_dd_%": -99.8,
+     "stopouts": 7,
+     "ruined": "2008-08-11"
+    },
+    "okna_4m": {
+     "windows": 204,
+     "median_%": -79.0,
+     "P(strata)_%": 75.0,
+     "P(-50%)_%": 63.7,
+     "P(wyzerowanie)_%": 35.3,
+     "P(likwidacja)_%": 87.7,
+     "P(+80%)_%": 17.2,
+     "best_%": 1114.7
+    }
+   }
+  },
+  "momentum 120d LONG/bez pozycji": {
+   "1x": {
+    "2008-2024": {
+     "final_x": 1.505,
+     "cagr_%": 2.4,
+     "max_dd_%": -38.5,
+     "stopouts": 0,
+     "ruined": null
+    },
+    "okna_4m": {
+     "windows": 189,
+     "median_%": 0.6,
+     "P(strata)_%": 46.0,
+     "P(-50%)_%": 0.0,
+     "P(wyzerowanie)_%": 0.0,
+     "P(likwidacja)_%": 0.0,
+     "P(+80%)_%": 0.0,
+     "best_%": 25.3
+    }
+   },
+   "2x": {
+    "2008-2024": {
+     "final_x": 1.928,
+     "cagr_%": 3.9,
+     "max_dd_%": -59.8,
+     "stopouts": 0,
+     "ruined": null
+    },
+    "okna_4m": {
+     "windows": 189,
+     "median_%": 1.1,
+     "P(strata)_%": 46.0,
+     "P(-50%)_%": 0.0,
+     "P(wyzerowanie)_%": 0.0,
+     "P(likwidacja)_%": 0.0,
+     "P(+80%)_%": 0.0,
+     "best_%": 51.2
+    }
+   },
+   "5x": {
+    "2008-2024": {
+     "final_x": 1.995,
+     "cagr_%": 4.1,
+     "max_dd_%": -88.5,
+     "stopouts": 0,
+     "ruined": null
+    },
+    "okna_4m": {
+     "windows": 189,
+     "median_%": 2.2,
+     "P(strata)_%": 47.1,
+     "P(-50%)_%": 2.6,
+     "P(wyzerowanie)_%": 0.0,
+     "P(likwidacja)_%": 0.0,
+     "P(+80%)_%": 1.6,
+     "best_%": 132.8
+    }
+   },
+   "10x": {
+    "2008-2024": {
+     "final_x": 0.297,
+     "cagr_%": -6.9,
+     "max_dd_%": -99.2,
+     "stopouts": 0,
+     "ruined": null
+    },
+    "okna_4m": {
+     "windows": 189,
+     "median_%": 0.2,
+     "P(strata)_%": 49.7,
+     "P(-50%)_%": 17.5,
+     "P(wyzerowanie)_%": 0.0,
+     "P(likwidacja)_%": 5.3,
+     "P(+80%)_%": 12.7,
+     "best_%": 281.0
+    }
+   },
+   "20x": {
+    "2008-2024": {
+     "final_x": 0.006,
+     "cagr_%": -25.9,
+     "max_dd_%": -99.9,
+     "stopouts": 4,
+     "ruined": "2012-08-30"
+    },
+    "okna_4m": {
+     "windows": 189,
+     "median_%": -25.9,
+     "P(strata)_%": 61.4,
+     "P(-50%)_%": 40.2,
+     "P(wyzerowanie)_%": 4.2,
+     "P(likwidacja)_%": 36.5,
+     "P(+80%)_%": 21.7,
+     "best_%": 623.8
+    }
+   },
+   "50x": {
+    "2008-2024": {
+     "final_x": 0.006,
+     "cagr_%": -26.3,
+     "max_dd_%": -99.8,
+     "stopouts": 9,
+     "ruined": "2009-01-25"
+    },
+    "okna_4m": {
+     "windows": 189,
+     "median_%": -73.0,
+     "P(strata)_%": 73.5,
+     "P(-50%)_%": 60.3,
+     "P(wyzerowanie)_%": 17.5,
+     "P(likwidacja)_%": 84.1,
+     "P(+80%)_%": 18.0,
+     "best_%": 1114.7
+    }
+   }
+  },
+  "SHORT 07-15 UTC (Londyn)": {
+   "1x": {
+    "2008-2024": {
+     "final_x": 1.149,
+     "cagr_%": 0.8,
+     "max_dd_%": -48.4,
+     "stopouts": 0,
+     "ruined": null
+    },
+    "okna_4m": {
+     "windows": 204,
+     "median_%": -0.4,
+     "P(strata)_%": 54.4,
+     "P(-50%)_%": 0.0,
+     "P(wyzerowanie)_%": 0.0,
+     "P(likwidacja)_%": 0.0,
+     "P(+80%)_%": 0.0,
+     "best_%": 27.3
+    }
+   },
+   "2x": {
+    "2008-2024": {
+     "final_x": 1.034,
+     "cagr_%": 0.2,
+     "max_dd_%": -75.3,
+     "stopouts": 0,
+     "ruined": null
+    },
+    "okna_4m": {
+     "windows": 204,
+     "median_%": -1.8,
+     "P(strata)_%": 55.4,
+     "P(-50%)_%": 0.0,
+     "P(wyzerowanie)_%": 0.0,
+     "P(likwidacja)_%": 0.0,
+     "P(+80%)_%": 0.0,
+     "best_%": 59.4
+    }
+   },
+   "5x": {
+    "2008-2024": {
+     "final_x": 0.173,
+     "cagr_%": -9.8,
+     "max_dd_%": -98.3,
+     "stopouts": 0,
+     "ruined": null
+    },
+    "okna_4m": {
+     "windows": 204,
+     "median_%": -6.7,
+     "P(strata)_%": 59.3,
+     "P(-50%)_%": 2.0,
+     "P(wyzerowanie)_%": 0.0,
+     "P(likwidacja)_%": 0.0,
+     "P(+80%)_%": 4.4,
+     "best_%": 195.3
+    }
+   },
+   "10x": {
+    "2008-2024": {
+     "final_x": 0.01,
+     "cagr_%": -23.8,
+     "max_dd_%": -99.6,
+     "stopouts": 0,
+     "ruined": "2020-02-03"
+    },
+    "okna_4m": {
+     "windows": 204,
+     "median_%": -21.4,
+     "P(strata)_%": 68.1,
+     "P(-50%)_%": 23.5,
+     "P(wyzerowanie)_%": 0.0,
+     "P(likwidacja)_%": 0.0,
+     "P(+80%)_%": 13.2,
+     "best_%": 581.5
+    }
+   },
+   "20x": {
+    "2008-2024": {
+     "final_x": 0.008,
+     "cagr_%": -24.7,
+     "max_dd_%": -99.2,
+     "stopouts": 2,
+     "ruined": "2008-09-29"
+    },
+    "okna_4m": {
+     "windows": 204,
+     "median_%": -57.2,
+     "P(strata)_%": 77.5,
+     "P(-50%)_%": 57.4,
+     "P(wyzerowanie)_%": 4.4,
+     "P(likwidacja)_%": 4.9,
+     "P(+80%)_%": 12.7,
+     "best_%": 2257.2
+    }
+   },
+   "50x": {
+    "2008-2024": {
+     "final_x": 0.008,
+     "cagr_%": -24.7,
+     "max_dd_%": -98.8,
+     "stopouts": 7,
+     "ruined": "2008-01-28"
+    },
+    "okna_4m": {
+     "windows": 204,
+     "median_%": -99.0,
+     "P(strata)_%": 89.7,
+     "P(-50%)_%": 88.2,
+     "P(wyzerowanie)_%": 57.4,
+     "P(likwidacja)_%": 97.5,
+     "P(+80%)_%": 7.4,
+     "best_%": 11210.3
+    }
+   }
+  },
+  "strategia doradcy M15 (SL/TP)": {
+   "1x": {
+    "2008-2024": {
+     "final_x": 0.677,
+     "cagr_%": -2.3,
+     "max_dd_%": -35.1,
+     "stopouts": 0,
+     "ruined": null
+    },
+    "okna_4m": {
+     "windows": 204,
+     "median_%": -0.7,
+     "P(strata)_%": 71.1,
+     "P(-50%)_%": 0.0,
+     "P(wyzerowanie)_%": 0.0,
+     "P(likwidacja)_%": 0.0,
+     "P(+80%)_%": 0.0,
+     "best_%": 3.5
+    }
+   },
+   "2x": {
+    "2008-2024": {
+     "final_x": 0.45,
+     "cagr_%": -4.6,
+     "max_dd_%": -58.6,
+     "stopouts": 0,
+     "ruined": null
+    },
+    "okna_4m": {
+     "windows": 204,
+     "median_%": -1.4,
+     "P(strata)_%": 71.1,
+     "P(-50%)_%": 0.0,
+     "P(wyzerowanie)_%": 0.0,
+     "P(likwidacja)_%": 0.0,
+     "P(+80%)_%": 0.0,
+     "best_%": 7.1
+    }
+   },
+   "5x": {
+    "2008-2024": {
+     "final_x": 0.118,
+     "cagr_%": -11.8,
+     "max_dd_%": -90.3,
+     "stopouts": 0,
+     "ruined": null
+    },
+    "okna_4m": {
+     "windows": 204,
+     "median_%": -3.6,
+     "P(strata)_%": 73.0,
+     "P(-50%)_%": 0.0,
+     "P(wyzerowanie)_%": 0.0,
+     "P(likwidacja)_%": 0.0,
+     "P(+80%)_%": 0.0,
+     "best_%": 18.4
+    }
+   },
+   "10x": {
+    "2008-2024": {
+     "final_x": 0.01,
+     "cagr_%": -23.9,
+     "max_dd_%": -99.2,
+     "stopouts": 0,
+     "ruined": "2024-05-14"
+    },
+    "okna_4m": {
+     "windows": 204,
+     "median_%": -7.4,
+     "P(strata)_%": 74.0,
+     "P(-50%)_%": 0.0,
+     "P(wyzerowanie)_%": 0.0,
+     "P(likwidacja)_%": 0.0,
+     "P(+80%)_%": 0.0,
+     "best_%": 38.9
+    }
+   },
+   "20x": {
+    "2008-2024": {
+     "final_x": 0.01,
+     "cagr_%": -23.8,
+     "max_dd_%": -99.4,
+     "stopouts": 0,
+     "ruined": "2011-09-11"
+    },
+    "okna_4m": {
+     "windows": 204,
+     "median_%": -16.0,
+     "P(strata)_%": 77.9,
+     "P(-50%)_%": 10.3,
+     "P(wyzerowanie)_%": 0.0,
+     "P(likwidacja)_%": 0.0,
+     "P(+80%)_%": 1.0,
+     "best_%": 86.1
+    }
+   },
+   "50x": {
+    "2008-2024": {
+     "final_x": 0.01,
+     "cagr_%": -23.9,
+     "max_dd_%": -99.6,
+     "stopouts": 1,
+     "ruined": "2008-10-15"
+    },
+    "okna_4m": {
+     "windows": 204,
+     "median_%": -48.9,
+     "P(strata)_%": 87.3,
+     "P(-50%)_%": 49.0,
+     "P(wyzerowanie)_%": 0.5,
+     "P(likwidacja)_%": 14.2,
+     "P(+80%)_%": 4.4,
+     "best_%": 267.4
+    }
+   }
+  }
+ }
+}
