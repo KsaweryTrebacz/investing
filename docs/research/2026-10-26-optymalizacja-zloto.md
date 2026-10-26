@@ -1,7 +1,7 @@
 # Optymalizacja i testy skuteczności na publicznych danych złota
 
-Data: 2026-10-26. Wyniki surowe: `docs/research/wyniki/` (study.json, trend.json, edges.json, leverage.json, grid_full_period.csv.gz).
-Kod: `goldbot/research/` (datasets.py, study.py, trend.py, edges.py, leverage.py, download.sh).
+Data: 2026-10-26. Wyniki surowe: `docs/research/wyniki/` (study.json, trend.json, edges.json, leverage.json, sizing.json, grid_full_period.csv.gz).
+Kod: `goldbot/research/` (datasets.py, study.py, trend.py, edges.py, leverage.py, sizing.py, download.sh).
 
 ## Wniosek
 
@@ -151,6 +151,40 @@ Pełne wyniki dla dźwigni 1, 2, 5, 10, 20 i 50: `docs/research/wyniki/leverage.
 - W horyzoncie 4 miesięcy duża dźwignia działa jak loteria. Przy 20x trzymanie złota dało +80% w 26% okien, ale w 52% okien stratę ponad połowy kapitału i w 14% wyzerowanie rachunku. Przy 50x mediana to −79%.
 - W UE limit dźwigni na złocie dla klienta detalicznego to 1:20 (ESMA). Dźwignia 1:50 oznacza rachunek profesjonalny albo brokera spoza tych zasad.
 
+### 10. Optymalna dźwignia (research/sizing.py)
+
+Kryterium: największy kapitał końcowy, czyli maksymalny wzrost geometryczny (Kelly), bez kary za spadki. Rachunek przeliczany codziennie: ekspozycja = dźwignia × kapitał, depozyt 2% (1:50), likwidacja przy 50% depozytu, spread od zmian wielkości, finansowanie od całej wartości. Lata 2008–2024. Każde okno liczone od świeżego rachunku.
+
+Teoria zgadza się z symulacją. Dla trzymania złota (średni zwrot 6,6% rocznie, zmienność 16,8%) optimum Kelly'ego μ/σ² wynosi 1,05× przy finansowaniu −5%, 1,94× przy −2,5% i 2,82× przy 0%. Najlepsza stała dźwignia w symulacji to odpowiednio 1×, 2× i 3×.
+
+Najlepsza strategia do lewarowania to momentum 120 dni (LONG albo bez pozycji). Sposoby doboru dźwigni (kapitał końcowy, start = 1):
+
+| Sposób doboru dźwigni | Finansowanie −5% | −2,5% | 0% |
+|---|---|---|---|
+| Najlepsza stała dźwignia ze znajomością przyszłości | 2× → 1,77 | 3× → 3,38 | 4× → 8,18 |
+| Walk-forward: stała dźwignia wybierana co roku na 3 latach wstecz | 0,64 | 0,75 | 1,23 |
+| Walk-forward: docelowa zmienność wybierana co roku | 2,13 (spadek −75%) | 3,97 | 9,67 |
+| Kelly kroczący (estymacja z 2 lat), pełny / połowa | 0,02 / 0,48 | 0,03 / 0,83 | 0,05 / 1,68 |
+| **Stała docelowa zmienność wybrana na 2008–2015, test na 2016–2024** | **50% → 1,98** | **50% → 3,85** | **75% → 9,11** |
+| Kup i trzymaj bez dźwigni, dla porównania | 1,35 | 2,07 | 3,16 |
+
+Stała docelowa zmienność, momentum 120 dni, finansowanie −5% (2008–2024, okna 4-miesięczne z lat 2016–2024):
+
+| Docelowa zmienność | Kapitał końcowy | Największy spadek | Dźwignia średnia / maks. | 4 mies.: mediana | P(+80%) | P(−50%) |
+|---|---|---|---|---|---|---|
+| 10% | 1,70 | −26% | 0,8 / 2,2 | +0,8% | 0% | 0% |
+| 20% | 2,52 | −48% | 1,5 / 4,5 | +1,4% | 0% | 0% |
+| 30% | 3,23 | −65% | 2,3 / 6,7 | +1,8% | 0% | 0% |
+| **50%** | **3,46** | −86% | 3,8 / 11,2 | +2,2% | 3% | 0% |
+| 75% | 1,64 | −97% | 5,7 / 16,9 | +1,6% | 7% | 6% |
+| 100% | 0,30 | −100% | 7,6 / 22,5 | 0,0% | 10% | 12% |
+| 150% | 0,00 | −100% | 11,4 / 33,7 | −2,9% | 14% | 23% |
+
+- **Optimum:** dźwignia dopasowywana do zmienności, średnio około 4× (chwilowo do 11×), czyli daleko poniżej dostępnych 50×. To samo optimum (50%) wychodzi w obu połowach danych, więc jest stabilne. Powyżej niego kapitał końcowy szybko spada, a od około 11× średnio rachunek się zeruje.
+- **Dobór dźwigni co roku na podstawie ostatnich lat szkodzi.** Wybiera dużą dźwignię po dobrych latach i oddaje zysk w następnych (2012: −41%, 2021: −40%). Kelly z historycznych średnich też zawodzi, bo błąd estymacji średniej jest za duży.
+- **Optimum oznacza ogromne spadki** (−86% przy 50%). Cel 30% daje 93% kapitału końcowego optimum przy spadku −65%, a cel 20% daje 73% przy spadku −48%.
+- **Zysk pochodzi głównie z hossy złota** (2009–2011, 2019–2024). Sam filtr momentum nie jest istotny statystycznie (t ≈ 1–2), więc wynik zakłada, że złoto dalej będzie wyraźnie trendować. Strategia doradcy M15 i krótka pozycja w godzinach Londynu mają ujemną wartość oczekiwaną, więc ich optymalna dźwignia to 0.
+
 ## Zmiany w programie
 
 - `strategy_validated` w konfiguracji instrumentu (domyślnie `false`): sygnał M15 daje najwyżej „obserwację”, a plan jest pokazany jako wstrzymany, z odnośnikiem do tego raportu. Zmienić na `true` można dopiero, gdy `python main.py validate` na danych Twojego brokera da dodatni wynik na okresie kontrolnym po kosztach i przy rozsądnej liczbie transakcji.
@@ -174,6 +208,7 @@ python -m research.study --broker ../dane/XAU_15m_data.csv --dukascopy ../dane/d
 python -m research.trend --broker ../dane/XAU_15m_data.csv --dukascopy ../dane/dukascopy_m15 --out ../wyniki
 python -m research.edges --broker ../dane/XAU_15m_data.csv --dukascopy ../dane/dukascopy_m15 --out ../wyniki
 python -m research.leverage --broker ../dane/XAU_15m_data.csv --dukascopy ../dane/dukascopy_m15 --out ../wyniki
+python -m research.sizing --broker ../dane/XAU_15m_data.csv --dukascopy ../dane/dukascopy_m15 --out ../wyniki
 ```
 
 Pełna siatka liczy się 10–15 minut na 4 rdzeniach.

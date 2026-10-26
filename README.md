@@ -121,7 +121,7 @@ Formaty odpowiedzi FRED (kalendarz) i Alpha Vantage są przyjęte z dokumentacji
 
 ## Badania na danych historycznych
 
-`goldbot/research/` testuje strategię na publicznych notowaniach złota: pobranie danych (`download.sh`), przeliczenie czasu serwera na UTC, model spreadu z prawdziwych bid/ask Dukascopy, optymalizacja walk-forward (`study.py`), Monte Carlo ryzyka utraty kapitału, porównanie z losowymi wejściami, alternatywna strategia trendowa na D1 (`trend.py`) oraz inne rodziny strategii bez ograniczeń ryzyka: sesje, momentum, średnie, RSI(2), wybicia (`edges.py`) oraz symulacja rachunku CFD z dźwignią do 1:50 i likwidacją przez brokera (`leverage.py`). Wyniki i wnioski: `docs/research/`.
+`goldbot/research/` testuje strategię na publicznych notowaniach złota: pobranie danych (`download.sh`), przeliczenie czasu serwera na UTC, model spreadu z prawdziwych bid/ask Dukascopy, optymalizacja walk-forward (`study.py`), Monte Carlo ryzyka utraty kapitału, porównanie z losowymi wejściami, alternatywna strategia trendowa na D1 (`trend.py`) oraz inne rodziny strategii bez ograniczeń ryzyka: sesje, momentum, średnie, RSI(2), wybicia (`edges.py`) oraz symulacja rachunku CFD z dźwignią do 1:50 i likwidacją przez brokera (`leverage.py`) i dobór optymalnej dźwigni: stała, celowanie w zmienność, Kelly (`sizing.py`). Wyniki i wnioski: `docs/research/`.
 
 Filtry strategii (sesja, zgodność EMA 20/50, zapas do szczytu lub dołka, wyłączenie reżimu) ustawia się w `config.json` w sekcji `strategy` instrumentu; domyślnie są wyłączone. `strategy_validated: true` ustaw dopiero wtedy, gdy `validate` na danych Twojego brokera da dodatni wynik na okresie kontrolnym po kosztach.
 
