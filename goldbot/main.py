@@ -138,8 +138,9 @@ def cmd_validate(args):
     except DataError as e:
         print(f"Dane odrzucone: {e}")
         return 1
-    df = prepare(m15, d1, usd, yld, macro=instr.macro)
-    res = walk_forward(df, Params(risk_per_trade=cfg.account.risk_per_trade), split=args.split, costs=instr.costs)
+    p = Params(**{**instr.strategy, "risk_per_trade": cfg.account.risk_per_trade})
+    df = prepare(m15, d1, usd, yld, p, macro=instr.macro)
+    res = walk_forward(df, p, split=args.split, costs=instr.costs)
     pd.set_option("display.width", 200)
     print(f"{instr.name}: świece M15 {len(df)}  ({df.time.iloc[0]} -> {df.time.iloc[-1]}), "
           f"podział {args.split:.0%}/{1 - args.split:.0%}, ryzyko {cfg.account.risk_per_trade:.1%} na transakcję")

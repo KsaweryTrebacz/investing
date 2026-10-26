@@ -36,10 +36,15 @@ class Context:
     events_known: bool = False                    # czy jakiekolwiek źródło wydarzeń jest skonfigurowane
 
 
-def run_cycle(m15, d1, usd, yld, store, send=None, p: Params = Params(), now=None, ctx: Context | None = None) -> dict:
-    """Rzuca guards.DataError, gdy dane są uszkodzone. Wtedy nic nie jest zapisywane."""
+def run_cycle(m15, d1, usd, yld, store, send=None, p: Params | None = None, now=None,
+              ctx: Context | None = None) -> dict:
+    """Rzuca guards.DataError, gdy dane są uszkodzone. Wtedy nic nie jest zapisywane.
+
+    Bez `p` parametry strategii pochodzą z konfiguracji instrumentu (sekcja strategy) i wartości domyślnych.
+    """
     ctx = ctx or Context()
     cfg, instr = ctx.cfg, ctx.cfg.instrument(ctx.instrument)
+    p = p or Params(**instr.strategy)
     validate_candles(m15, "M15", p.ema_len + 50)
     validate_candles(d1, "D1", MIN_D1)
     now = now if now is not None else pd.Timestamp.now(tz="UTC")

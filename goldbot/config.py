@@ -48,6 +48,7 @@ class Instrument:
     csv: dict = field(default_factory=dict)   # {"m15": ścieżka, "d1": ścieżka, "spread": typowy spread}
     symbol: str | None = None          # symbol spółki w Alpha Vantage (wyniki, dywidendy)
     news: dict = field(default_factory=dict)  # parametry NEWS_SENTIMENT: {"tickers": ..., "topics": ...}
+    strategy: dict = field(default_factory=dict)  # nadpisania strategy.Params, np. {"sl_atr": 2.0}
     costs: Costs = field(default_factory=Costs)
 
     @property
