@@ -1,0 +1,119 @@
+# Optymalizacja i testy skuteczności na publicznych danych złota
+
+Data: 2026-10-26. Wyniki surowe: `docs/research/wyniki/` (study.json, trend.json, grid_full_period.csv.gz).
+Kod: `goldbot/research/` (datasets.py, study.py, trend.py, download.sh).
+
+## Wniosek
+
+Strategia doradcy (M15: EMA 200, powrót RSI z korekty, przecięcie MACD, reżim dzienny) **nie ma przewagi na złocie**. Bez kosztów jej średni wynik to około 0R na transakcję, czyli tyle, ile losowe wejścia. Po realnym spreadzie i kosztach traci średnio 0,16R na transakcję, w 15 z 17 lat. Optymalizacja 2880 wariantów nie pomogła: wybór parametrów na latach poprzednich dał poza próbą −0,17R na transakcję. Żaden wariant, także wybrany ze znajomością przyszłości, nie ma istotnie dodatniego wyniku.
+
+Najlepszy wynik przy kontroli ryzyka utraty kapitału daje więc **niezawieranie transakcji z tej strategii**. Program dostał bramkę walidacji: dopóki strategia nie jest oznaczona jako zwalidowana, sygnał daje najwyżej status „obserwacja”.
+
+## Dane
+
+| Źródło | Okres | Opis |
+|---|---|---|
+| BaseMax/XAUUSD-LSTM (GitHub) | 2004-06 – 2025-03 | M15, jedna cena (bid), czas serwera brokera przeliczony na UTC; 476 666 świec |
+| FX-Data/FX-Data-XAUUSD-DS (GitHub) | 2011-05 – 2018-06 | ticki Dukascopy z bid i ask, zagregowane do M15; 161 643 świece; niezależne źródło |
+
+- ejtraderLabs/historical-data (M15 2012–2022) i parshant65 (M1 2020–2025) okazały się tym samym strumieniem notowań co BaseMax (różnica cen 0,000), więc nie są osobnymi testami.
+- Opis parshant65 podaje czas UTC, ale skok zmienności po publikacji NFP wypada w danych o 15:30 przez cały rok. To czas serwera (Nowy Jork + 7 h, w latach 2004–2011 + 6 h). Przesunięcie wyznaczono z danych dla każdego roku i sprawdzono na dniach NFP latem i zimą.
+- Dane po 21.03.2025 mają luki do 80 dni i zostały pominięte.
+- Spread dla danych jednocenowych pochodzi z prawdziwych bid/ask Dukascopy: mediana od 2,2 punktu bazowego ceny w dzień do 3,1 pb wieczorem w UTC (około 0,4–0,6 USD przy cenie 2000 USD). Dodatkowo test z podwójnym spreadem.
+
+## Metoda
+
+- Koszty poza spreadem (założenia badania, nie stawki brokera): prowizja 0, finansowanie LONG −5% rocznie, SHORT −1% rocznie, poślizg na SL 0,1 ATR. SL przy luce cenowej po cenie otwarcia. Wygaśnięcie po 48 h jak na żywo.
+- Reżim dzienny tylko z trendu D1. W danych publicznych brak dziennych serii FRED (dolar, realne rentowności), więc składnika makro nie dało się sprawdzić.
+- Siatka: RSI 35/40/45, okno 5/10/20 świec, sesja (cała doba albo 7–17 UTC), zgodność EMA 20/50 (tak/nie), zapas do szczytu lub dołka (0 albo 2 ATR), reżim (tak/nie), SL 1/1,5/2/3 ATR, TP 1/1,5/2/3/4 ATR. Razem 2880 wariantów.
+- Walk-forward: dla każdego roku 2008–2024 wariant wybierany wyłącznie na 3 poprzednich latach. Kryterium to statystyka t średniego R, minimum 30 transakcji, a gdy żaden wariant nie ma dodatniego wyniku, rok jest bez transakcji. Wynik liczony jest na tym roku, poza próbą.
+- Ryzyko: Monte Carlo (10 000 losowań ze zwracaniem transakcji poza próbą) w horyzoncie 4 i 12 miesięcy, przy ryzyku 0,5%, 1% i 2% na transakcję.
+- Odniesienie: 100 serii losowych wejść (losowy moment i kierunek) z tymi samymi wyjściami i kosztami.
+
+## Wyniki
+
+### 1. Strategia domyślna, lata 2008–2024
+
+| Dane | Transakcje | Trafność | Średnio R | t | Wynik przy 0,5% | Największy spadek |
+|---|---|---|---|---|---|---|
+| BaseMax (model spreadu) | 1450 | 30,5% | −0,157 | −4,28 | −69% | −71% |
+| Dukascopy 2011–2018 (prawdziwy spread) | 424 | 31,4% | −0,131 | −1,90 | −25% | −30% |
+
+Strata jest w 15 z 17 lat. Jedyne lata na plusie to 2012 (+2,7R) i 2015 (+0,1R).
+
+### 2. Optymalizacja walk-forward (2880 wariantów)
+
+| Wariant | Transakcje | Trafność | Średnio R | t | Wynik przy 0,5% | Największy spadek |
+|---|---|---|---|---|---|---|
+| Pełna siatka, wybór co roku | 693 | 34,9% | −0,172 | −3,70 | −46% | −48% |
+| Tylko SL/TP, sygnał domyślny | 176 | 44,3% | −0,160 | −2,11 | −13% | −14% |
+| Najlepszy wariant ze znajomością przyszłości | 40 | 50,0% | +0,197 | 0,98 | +3,9% | −3,3% |
+
+Wybierane parametry zmieniały się co roku, bez stałego wzorca: raz z reżimem, raz bez, sesja raz włączona, raz nie, SL od 1,5 do 3 ATR. To typowy obraz dopasowania do szumu. Wariant, który program wybrałby dziś (okno 2022–2024: +0,21R, t = 1,87), na Dukascopy 2011–2018 daje −0,155R, a na BaseMax w tym samym okresie −0,104R.
+
+### 3. Wszystkie warianty na całym okresie 2004–2025
+
+Ze 2880 wariantów tylko 16 (0,6%) ma dodatni średni wynik i żaden nie ma t > 2 (najwyższe t = 0,66). 2432 warianty (84%) są istotnie stratne (t < −2). Najwyższa trafność to 78,8%, przy SL 3 ATR i TP 1 ATR, a średnio daje +0,04R, czyli trafność nie przekłada się na zysk.
+
+### 4. Sygnał bez kosztów (zerowy spread, bez poślizgu i finansowania)
+
+| Wariant | Transakcje | Średnio R | t |
+|---|---|---|---|
+| Domyślna | 2321 | +0,005 | 0,18 |
+| Domyślna bez reżimu | 6096 | +0,006 | 0,31 |
+| SL 3 / TP 3 ATR | 1958 | +0,020 | 0,89 |
+
+Sygnał nie przewiduje kierunku ceny. Cały wynik to koszty.
+
+### 5. Losowe wejścia
+
+Przy 1757 losowych sygnałach na serię średni wynik w 100 seriach to −0,178R, a 90% serii mieści się między −0,237R i −0,123R. Strategia domyślna (−0,170R) i wynik walk-forward (−0,172R) leżą w środku tego przedziału.
+
+### 6. Ryzyko utraty kapitału (Monte Carlo, wynik walk-forward, około 41 transakcji rocznie)
+
+| Ryzyko na transakcję | Horyzont | P(strata) | Mediana | 5% najgorszych | P(spadek ≥ 10%) | P(spadek ≥ 20%) |
+|---|---|---|---|---|---|---|
+| 0,5% | 4 mies. | 71% | −1,3% | −4,7% | 0% | 0% |
+| 1% | 4 mies. | 72% | −2,7% | −9,2% | 3% | 0% |
+| 2% | 4 mies. | 72% | −5,4% | −17,8% | 51% | 2% |
+| 0,5% | 12 mies. | 82% | −3,6% | −9,4% | 6% | 0% |
+| 1% | 12 mies. | 83% | −7,2% | −18,0% | 59% | 4% |
+| 2% | 12 mies. | 84% | −14,3% | −33,1% | 96% | 56% |
+
+Przy ujemnej wartości oczekiwanej większe ryzyko na transakcję nie zwiększa szansy zysku, tylko przyspiesza utratę kapitału. Limit 0,5% ze specyfikacji to tu najważniejsze zabezpieczenie.
+
+### 7. Inna rodzina strategii: trend na świecach dziennych (research/trend.py)
+
+| Wariant | Transakcje | Średnio R | t | Wynik przy 0,5% |
+|---|---|---|---|---|
+| Walk-forward, LONG i SHORT (54 warianty Donchiana) | 69 | +0,077 | 0,47 | +2,5% |
+| Walk-forward, tylko LONG | 47 | +0,208 | 0,90 | +4,9% |
+| Klasyczny 55/20 dni, stop 3 ATR, tylko LONG | 40 | +0,145 | 0,74 | +2,9% |
+| Klasyczny 55/20 dni, LONG i SHORT | 76 | −0,093 | −0,64 | −3,6% |
+| Kup i trzymaj złoto (bez dźwigni) | – | – | – | +206%, największy spadek −45% |
+
+Trend w wersji tylko LONG jest na plusie, ale bez istotności statystycznej (t < 1) i przy 0,5% ryzyka daje kilka procent w 17 lat. Odzwierciedla raczej wzrost ceny złota w tym okresie niż przewagę reguły. Nie wdrażam jej jako strategii doradcy.
+
+## Zmiany w programie
+
+- `strategy_validated` w konfiguracji instrumentu (domyślnie `false`): sygnał M15 daje najwyżej „obserwację”, a plan jest pokazany jako wstrzymany, z odnośnikiem do tego raportu. Zmienić na `true` można dopiero, gdy `python main.py validate` na danych Twojego brokera da dodatni wynik na okresie kontrolnym po kosztach i przy rozsądnej liczbie transakcji.
+- Filtry jakości (sesja, EMA 20/50, zapas do szczytu lub dołka, wyłączenie reżimu) są dostępne w sekcji `strategy` konfiguracji, domyślnie wyłączone. Żaden nie dał poprawy poza próbą.
+- Parametry domyślne strategii bez zmian: żaden wariant nie był lepszy w sposób powtarzalny.
+
+## Ograniczenia
+
+- Składnik makro reżimu (dolar, realne rentowności z FRED) nie był testowany: brak tych danych w źródłach dostępnych z tego środowiska.
+- Główne źródło to notowania jednego brokera z modelowanym spreadem. Niezależne źródło (Dukascopy) pokrywa tylko lata 2011–2018.
+- Koszty poza spreadem są założeniami. Wynik bez kosztów (punkt 4) pokazuje, że wniosek od nich nie zależy.
+- Nie badano innych rynków ani interwałów niż M15 i D1.
+
+## Jak odtworzyć
+
+```
+cd goldbot
+research/download.sh ../dane                 # około 1 GB transferu, kilkanaście minut
+python -m research.study --broker ../dane/XAU_15m_data.csv --dukascopy ../dane/dukascopy_m15 --out ../wyniki
+python -m research.trend --broker ../dane/XAU_15m_data.csv --dukascopy ../dane/dukascopy_m15 --out ../wyniki
+```
+
+Pełna siatka liczy się 10–15 minut na 4 rdzeniach.

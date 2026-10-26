@@ -19,6 +19,7 @@ def run(df: pd.DataFrame, p: Params = Params(), equity0: float = 10_000.0, costs
     """
     a = {c: df[c].to_numpy() for c in df.columns if c != "time"}
     ns = pd.DatetimeIndex(df["time"]).as_unit("ns").asi8
+    times = df["time"].array
     expire_ns = None if expire_hours is None else int(expire_hours * 3600e9)
     n, equity, i = len(df), equity0, 0
     trades, curve = [], [equity0]
@@ -63,13 +64,13 @@ def run(df: pd.DataFrame, p: Params = Params(), equity0: float = 10_000.0, costs
 
         unit_cost = 0.0
         if costs is not None:
-            pc = per_unit_costs(costs, sig, entry, a["atr"][i], df["time"].iloc[j], df["time"].iloc[k])
+            pc = per_unit_costs(costs, sig, entry, a["atr"][i], times[j], times[k])
             unit_cost = (pc["commission"] or 0.0) + (pc["financing"] or 0.0)
         pnl = units * (sig * (exit_px - entry) - unit_cost)
         equity += pnl
         curve.append(equity)
         trades.append({
-            "entry_time": df["time"].iloc[j], "exit_time": df["time"].iloc[k],
+            "entry_time": times[j], "exit_time": times[k],
             "side": "LONG" if sig == 1 else "SHORT", "entry": entry, "exit": exit_px,
             "reason": reason, "R": pnl / (units * dist_sl), "pnl": pnl, "equity": equity,
         })

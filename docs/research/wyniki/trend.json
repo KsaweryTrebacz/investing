@@ -1,0 +1,887 @@
+{
+ "grid": {
+  "entry_n": [
+   20,
+   55,
+   100
+  ],
+  "exit_n": [
+   10,
+   20,
+   50
+  ],
+  "stop_atr": [
+   2.0,
+   3.0,
+   4.0
+  ],
+  "long_only": [
+   true,
+   false
+  ]
+ },
+ "min_trades": 10,
+ "buy_and_hold": {
+  "return_%": 206.1,
+  "max_dd_%": -44.6
+ },
+ "walk_forward": {
+  "stats": {
+   "trades": 69,
+   "win_rate_%": 37.7,
+   "avg_R": 0.0774,
+   "total_R": 5.34,
+   "t_stat": 0.47,
+   "max_dd_R": -6.77,
+   "profit_factor": 1.21,
+   "return_%_at_0.5%": 2.54,
+   "max_dd_%_at_0.5%": -3.34
+  },
+  "by_year": {
+   "2008": -0.81,
+   "2009": 1.55,
+   "2010": 1.87,
+   "2011": 3.05,
+   "2012": 0.38,
+   "2013": -1.39,
+   "2014": -0.33,
+   "2015": -0.17,
+   "2016": -0.5,
+   "2017": -3.28,
+   "2019": 7.81,
+   "2020": -0.37,
+   "2021": -2.51,
+   "2022": 0.04
+  },
+  "chosen": [
+   {
+    "year": 2008,
+    "params": {
+     "entry_n": 20,
+     "exit_n": 10,
+     "stop_atr": 4.0,
+     "long_only": true
+    },
+    "train_t": 1.51,
+    "test": {
+     "trades": 3,
+     "win_rate_%": 33.3,
+     "avg_R": -0.2694,
+     "total_R": -0.81,
+     "t_stat": -1.31,
+     "max_dd_R": -0.9,
+     "profit_factor": 0.1,
+     "return_%_at_0.5%": -0.4,
+     "max_dd_%_at_0.5%": -0.45
+    }
+   },
+   {
+    "year": 2009,
+    "params": {
+     "entry_n": 20,
+     "exit_n": 10,
+     "stop_atr": 4.0,
+     "long_only": true
+    },
+    "train_t": 1.33,
+    "test": {
+     "trades": 5,
+     "win_rate_%": 80.0,
+     "avg_R": 0.3095,
+     "total_R": 1.55,
+     "t_stat": 1.5,
+     "max_dd_R": -0.32,
+     "profit_factor": 5.89,
+     "return_%_at_0.5%": 0.78,
+     "max_dd_%_at_0.5%": -0.16
+    }
+   },
+   {
+    "year": 2010,
+    "params": {
+     "entry_n": 20,
+     "exit_n": 10,
+     "stop_atr": 4.0,
+     "long_only": true
+    },
+    "train_t": 1.22,
+    "test": {
+     "trades": 4,
+     "win_rate_%": 50.0,
+     "avg_R": 0.4665,
+     "total_R": 1.87,
+     "t_stat": 0.79,
+     "max_dd_R": -0.95,
+     "profit_factor": 2.96,
+     "return_%_at_0.5%": 0.93,
+     "max_dd_%_at_0.5%": -0.48
+    }
+   },
+   {
+    "year": 2011,
+    "params": {
+     "entry_n": 20,
+     "exit_n": 10,
+     "stop_atr": 4.0,
+     "long_only": true
+    },
+    "train_t": 1.0,
+    "test": {
+     "trades": 6,
+     "win_rate_%": 66.7,
+     "avg_R": 0.5091,
+     "total_R": 3.05,
+     "t_stat": 0.82,
+     "max_dd_R": -1.09,
+     "profit_factor": 3.81,
+     "return_%_at_0.5%": 1.52,
+     "max_dd_%_at_0.5%": -0.54
+    }
+   },
+   {
+    "year": 2012,
+    "params": {
+     "entry_n": 55,
+     "exit_n": 10,
+     "stop_atr": 2.0,
+     "long_only": true
+    },
+    "train_t": 1.7,
+    "test": {
+     "trades": 3,
+     "win_rate_%": 33.3,
+     "avg_R": 0.1282,
+     "total_R": 0.38,
+     "t_stat": 0.11,
+     "max_dd_R": -2.17,
+     "profit_factor": 1.18,
+     "return_%_at_0.5%": 0.18,
+     "max_dd_%_at_0.5%": -1.08
+    }
+   },
+   {
+    "year": 2013,
+    "params": {
+     "entry_n": 20,
+     "exit_n": 10,
+     "stop_atr": 4.0,
+     "long_only": true
+    },
+    "train_t": 1.24,
+    "test": {
+     "trades": 4,
+     "win_rate_%": 25.0,
+     "avg_R": -0.3466,
+     "total_R": -1.39,
+     "t_stat": -2.06,
+     "max_dd_R": -1.39,
+     "profit_factor": 0.1,
+     "return_%_at_0.5%": -0.69,
+     "max_dd_%_at_0.5%": -0.69
+    }
+   },
+   {
+    "year": 2014,
+    "params": {
+     "entry_n": 20,
+     "exit_n": 10,
+     "stop_atr": 4.0,
+     "long_only": false
+    },
+    "train_t": 1.13,
+    "test": {
+     "trades": 8,
+     "win_rate_%": 25.0,
+     "avg_R": -0.0416,
+     "total_R": -0.33,
+     "t_stat": -0.21,
+     "max_dd_R": -1.44,
+     "profit_factor": 0.84,
+     "return_%_at_0.5%": -0.17,
+     "max_dd_%_at_0.5%": -0.72
+    }
+   },
+   {
+    "year": 2015,
+    "params": {
+     "entry_n": 55,
+     "exit_n": 10,
+     "stop_atr": 3.0,
+     "long_only": false
+    },
+    "train_t": 0.86,
+    "test": {
+     "trades": 6,
+     "win_rate_%": 50.0,
+     "avg_R": -0.029,
+     "total_R": -0.17,
+     "t_stat": -0.11,
+     "max_dd_R": -1.22,
+     "profit_factor": 0.88,
+     "return_%_at_0.5%": -0.09,
+     "max_dd_%_at_0.5%": -0.61
+    }
+   },
+   {
+    "year": 2016,
+    "params": {
+     "entry_n": 100,
+     "exit_n": 10,
+     "stop_atr": 2.0,
+     "long_only": false
+    },
+    "train_t": 0.55,
+    "test": {
+     "trades": 5,
+     "win_rate_%": 40.0,
+     "avg_R": -0.1004,
+     "total_R": -0.5,
+     "t_stat": -0.22,
+     "max_dd_R": -2.41,
+     "profit_factor": 0.79,
+     "return_%_at_0.5%": -0.26,
+     "max_dd_%_at_0.5%": -1.2
+    }
+   },
+   {
+    "year": 2017,
+    "params": {
+     "entry_n": 55,
+     "exit_n": 10,
+     "stop_atr": 4.0,
+     "long_only": false
+    },
+    "train_t": 0.01,
+    "test": {
+     "trades": 7,
+     "win_rate_%": 0.0,
+     "avg_R": -0.4692,
+     "total_R": -3.28,
+     "t_stat": -5.63,
+     "max_dd_R": -3.28,
+     "profit_factor": 0.0,
+     "return_%_at_0.5%": -1.63,
+     "max_dd_%_at_0.5%": -1.63
+    }
+   },
+   {
+    "year": 2018,
+    "params": null,
+    "train_t": null
+   },
+   {
+    "year": 2019,
+    "params": {
+     "entry_n": 20,
+     "exit_n": 10,
+     "stop_atr": 2.0,
+     "long_only": true
+    },
+    "train_t": 0.58,
+    "test": {
+     "trades": 4,
+     "win_rate_%": 50.0,
+     "avg_R": 1.9535,
+     "total_R": 7.81,
+     "t_stat": 0.88,
+     "max_dd_R": -1.09,
+     "profit_factor": 4.59,
+     "return_%_at_0.5%": 3.89,
+     "max_dd_%_at_0.5%": -0.55
+    }
+   },
+   {
+    "year": 2020,
+    "params": {
+     "entry_n": 20,
+     "exit_n": 10,
+     "stop_atr": 3.0,
+     "long_only": true
+    },
+    "train_t": 1.19,
+    "test": {
+     "trades": 4,
+     "win_rate_%": 25.0,
+     "avg_R": -0.0926,
+     "total_R": -0.37,
+     "t_stat": -0.2,
+     "max_dd_R": -1.46,
+     "profit_factor": 0.76,
+     "return_%_at_0.5%": -0.19,
+     "max_dd_%_at_0.5%": -0.73
+    }
+   },
+   {
+    "year": 2021,
+    "params": {
+     "entry_n": 55,
+     "exit_n": 10,
+     "stop_atr": 2.0,
+     "long_only": false
+    },
+    "train_t": 1.01,
+    "test": {
+     "trades": 5,
+     "win_rate_%": 20.0,
+     "avg_R": -0.5023,
+     "total_R": -2.51,
+     "t_stat": -1.74,
+     "max_dd_R": -2.99,
+     "profit_factor": 0.16,
+     "return_%_at_0.5%": -1.25,
+     "max_dd_%_at_0.5%": -1.49
+    }
+   },
+   {
+    "year": 2022,
+    "params": {
+     "entry_n": 20,
+     "exit_n": 10,
+     "stop_atr": 2.0,
+     "long_only": true
+    },
+    "train_t": 0.64,
+    "test": {
+     "trades": 5,
+     "win_rate_%": 40.0,
+     "avg_R": 0.0085,
+     "total_R": 0.04,
+     "t_stat": 0.01,
+     "max_dd_R": -2.88,
+     "profit_factor": 1.01,
+     "return_%_at_0.5%": 0.01,
+     "max_dd_%_at_0.5%": -1.43
+    }
+   },
+   {
+    "year": 2023,
+    "params": null,
+    "train_t": null
+   },
+   {
+    "year": 2024,
+    "params": {
+     "entry_n": 100,
+     "exit_n": 50,
+     "stop_atr": 2.0,
+     "long_only": false
+    },
+    "train_t": 0.75,
+    "test": {
+     "trades": 0
+    }
+   }
+  ],
+  "trades_per_year": 4.1,
+  "monte_carlo_4m": {
+   "months": 4,
+   "trades_per_path": 1,
+   "0.5%": {
+    "P(strata)_%": 61.5,
+    "mediana_%": -0.15,
+    "p5_%": -0.54,
+    "p95_%": 1.16,
+    "P(spadek>=10%)_%": 0.0,
+    "P(spadek>=20%)_%": 0.0,
+    "P(spadek>=50%)_%": 0.0
+   },
+   "1.0%": {
+    "P(strata)_%": 61.5,
+    "mediana_%": -0.3,
+    "p5_%": -1.08,
+    "p95_%": 2.31,
+    "P(spadek>=10%)_%": 0.0,
+    "P(spadek>=20%)_%": 0.0,
+    "P(spadek>=50%)_%": 0.0
+   },
+   "2.0%": {
+    "P(strata)_%": 61.5,
+    "mediana_%": -0.61,
+    "p5_%": -2.17,
+    "p95_%": 4.62,
+    "P(spadek>=10%)_%": 0.0,
+    "P(spadek>=20%)_%": 0.0,
+    "P(spadek>=50%)_%": 0.0
+   }
+  },
+  "monte_carlo_12m": {
+   "months": 12,
+   "trades_per_path": 4,
+   "0.5%": {
+    "P(strata)_%": 55.5,
+    "mediana_%": -0.14,
+    "p5_%": -1.35,
+    "p95_%": 3.33,
+    "P(spadek>=10%)_%": 0.0,
+    "P(spadek>=20%)_%": 0.0,
+    "P(spadek>=50%)_%": 0.0
+   },
+   "1.0%": {
+    "P(strata)_%": 55.6,
+    "mediana_%": -0.29,
+    "p5_%": -2.68,
+    "p95_%": 6.62,
+    "P(spadek>=10%)_%": 0.0,
+    "P(spadek>=20%)_%": 0.0,
+    "P(spadek>=50%)_%": 0.0
+   },
+   "2.0%": {
+    "P(strata)_%": 55.8,
+    "mediana_%": -0.6,
+    "p5_%": -5.32,
+    "p95_%": 13.13,
+    "P(spadek>=10%)_%": 0.0,
+    "P(spadek>=20%)_%": 0.0,
+    "P(spadek>=50%)_%": 0.0
+   }
+  }
+ },
+ "walk_forward_long_only": {
+  "stats": {
+   "trades": 47,
+   "win_rate_%": 44.7,
+   "avg_R": 0.2084,
+   "total_R": 9.8,
+   "t_stat": 0.9,
+   "max_dd_R": -5.61,
+   "profit_factor": 1.57,
+   "return_%_at_0.5%": 4.87,
+   "max_dd_%_at_0.5%": -2.78
+  },
+  "by_year": {
+   "2008": -0.81,
+   "2009": 1.55,
+   "2010": 1.87,
+   "2011": 3.05,
+   "2012": 0.38,
+   "2013": -1.39,
+   "2014": -0.46,
+   "2019": 7.81,
+   "2020": -0.37,
+   "2021": -1.89,
+   "2022": 0.04
+  },
+  "chosen": [
+   {
+    "year": 2008,
+    "params": {
+     "entry_n": 20,
+     "exit_n": 10,
+     "stop_atr": 4.0,
+     "long_only": true
+    },
+    "train_t": 1.51,
+    "test": {
+     "trades": 3,
+     "win_rate_%": 33.3,
+     "avg_R": -0.2694,
+     "total_R": -0.81,
+     "t_stat": -1.31,
+     "max_dd_R": -0.9,
+     "profit_factor": 0.1,
+     "return_%_at_0.5%": -0.4,
+     "max_dd_%_at_0.5%": -0.45
+    }
+   },
+   {
+    "year": 2009,
+    "params": {
+     "entry_n": 20,
+     "exit_n": 10,
+     "stop_atr": 4.0,
+     "long_only": true
+    },
+    "train_t": 1.33,
+    "test": {
+     "trades": 5,
+     "win_rate_%": 80.0,
+     "avg_R": 0.3095,
+     "total_R": 1.55,
+     "t_stat": 1.5,
+     "max_dd_R": -0.32,
+     "profit_factor": 5.89,
+     "return_%_at_0.5%": 0.78,
+     "max_dd_%_at_0.5%": -0.16
+    }
+   },
+   {
+    "year": 2010,
+    "params": {
+     "entry_n": 20,
+     "exit_n": 10,
+     "stop_atr": 4.0,
+     "long_only": true
+    },
+    "train_t": 1.22,
+    "test": {
+     "trades": 4,
+     "win_rate_%": 50.0,
+     "avg_R": 0.4665,
+     "total_R": 1.87,
+     "t_stat": 0.79,
+     "max_dd_R": -0.95,
+     "profit_factor": 2.96,
+     "return_%_at_0.5%": 0.93,
+     "max_dd_%_at_0.5%": -0.48
+    }
+   },
+   {
+    "year": 2011,
+    "params": {
+     "entry_n": 20,
+     "exit_n": 10,
+     "stop_atr": 4.0,
+     "long_only": true
+    },
+    "train_t": 1.0,
+    "test": {
+     "trades": 6,
+     "win_rate_%": 66.7,
+     "avg_R": 0.5091,
+     "total_R": 3.05,
+     "t_stat": 0.82,
+     "max_dd_R": -1.09,
+     "profit_factor": 3.81,
+     "return_%_at_0.5%": 1.52,
+     "max_dd_%_at_0.5%": -0.54
+    }
+   },
+   {
+    "year": 2012,
+    "params": {
+     "entry_n": 55,
+     "exit_n": 10,
+     "stop_atr": 2.0,
+     "long_only": true
+    },
+    "train_t": 1.7,
+    "test": {
+     "trades": 3,
+     "win_rate_%": 33.3,
+     "avg_R": 0.1282,
+     "total_R": 0.38,
+     "t_stat": 0.11,
+     "max_dd_R": -2.17,
+     "profit_factor": 1.18,
+     "return_%_at_0.5%": 0.18,
+     "max_dd_%_at_0.5%": -1.08
+    }
+   },
+   {
+    "year": 2013,
+    "params": {
+     "entry_n": 20,
+     "exit_n": 10,
+     "stop_atr": 4.0,
+     "long_only": true
+    },
+    "train_t": 1.24,
+    "test": {
+     "trades": 4,
+     "win_rate_%": 25.0,
+     "avg_R": -0.3466,
+     "total_R": -1.39,
+     "t_stat": -2.06,
+     "max_dd_R": -1.39,
+     "profit_factor": 0.1,
+     "return_%_at_0.5%": -0.69,
+     "max_dd_%_at_0.5%": -0.69
+    }
+   },
+   {
+    "year": 2014,
+    "params": {
+     "entry_n": 20,
+     "exit_n": 10,
+     "stop_atr": 4.0,
+     "long_only": true
+    },
+    "train_t": 0.55,
+    "test": {
+     "trades": 4,
+     "win_rate_%": 25.0,
+     "avg_R": -0.116,
+     "total_R": -0.46,
+     "t_stat": -0.39,
+     "max_dd_R": -1.24,
+     "profit_factor": 0.63,
+     "return_%_at_0.5%": -0.23,
+     "max_dd_%_at_0.5%": -0.62
+    }
+   },
+   {
+    "year": 2015,
+    "params": null,
+    "train_t": null
+   },
+   {
+    "year": 2016,
+    "params": null,
+    "train_t": null
+   },
+   {
+    "year": 2017,
+    "params": null,
+    "train_t": null
+   },
+   {
+    "year": 2018,
+    "params": null,
+    "train_t": null
+   },
+   {
+    "year": 2019,
+    "params": {
+     "entry_n": 20,
+     "exit_n": 10,
+     "stop_atr": 2.0,
+     "long_only": true
+    },
+    "train_t": 0.58,
+    "test": {
+     "trades": 4,
+     "win_rate_%": 50.0,
+     "avg_R": 1.9535,
+     "total_R": 7.81,
+     "t_stat": 0.88,
+     "max_dd_R": -1.09,
+     "profit_factor": 4.59,
+     "return_%_at_0.5%": 3.89,
+     "max_dd_%_at_0.5%": -0.55
+    }
+   },
+   {
+    "year": 2020,
+    "params": {
+     "entry_n": 20,
+     "exit_n": 10,
+     "stop_atr": 3.0,
+     "long_only": true
+    },
+    "train_t": 1.19,
+    "test": {
+     "trades": 4,
+     "win_rate_%": 25.0,
+     "avg_R": -0.0926,
+     "total_R": -0.37,
+     "t_stat": -0.2,
+     "max_dd_R": -1.46,
+     "profit_factor": 0.76,
+     "return_%_at_0.5%": -0.19,
+     "max_dd_%_at_0.5%": -0.73
+    }
+   },
+   {
+    "year": 2021,
+    "params": {
+     "entry_n": 20,
+     "exit_n": 10,
+     "stop_atr": 3.0,
+     "long_only": true
+    },
+    "train_t": 0.93,
+    "test": {
+     "trades": 5,
+     "win_rate_%": 40.0,
+     "avg_R": -0.377,
+     "total_R": -1.89,
+     "t_stat": -1.16,
+     "max_dd_R": -2.43,
+     "profit_factor": 0.23,
+     "return_%_at_0.5%": -0.94,
+     "max_dd_%_at_0.5%": -1.21
+    }
+   },
+   {
+    "year": 2022,
+    "params": {
+     "entry_n": 20,
+     "exit_n": 10,
+     "stop_atr": 2.0,
+     "long_only": true
+    },
+    "train_t": 0.64,
+    "test": {
+     "trades": 5,
+     "win_rate_%": 40.0,
+     "avg_R": 0.0085,
+     "total_R": 0.04,
+     "t_stat": 0.01,
+     "max_dd_R": -2.88,
+     "profit_factor": 1.01,
+     "return_%_at_0.5%": 0.01,
+     "max_dd_%_at_0.5%": -1.43
+    }
+   },
+   {
+    "year": 2023,
+    "params": null,
+    "train_t": null
+   },
+   {
+    "year": 2024,
+    "params": null,
+    "train_t": null
+   }
+  ],
+  "trades_per_year": 2.8,
+  "monte_carlo_4m": {
+   "months": 4,
+   "trades_per_path": 1,
+   "0.5%": {
+    "P(strata)_%": 54.6,
+    "mediana_%": -0.14,
+    "p5_%": -0.55,
+    "p95_%": 1.28,
+    "P(spadek>=10%)_%": 0.0,
+    "P(spadek>=20%)_%": 0.0,
+    "P(spadek>=50%)_%": 0.0
+   },
+   "1.0%": {
+    "P(strata)_%": 54.6,
+    "mediana_%": -0.28,
+    "p5_%": -1.09,
+    "p95_%": 2.55,
+    "P(spadek>=10%)_%": 0.0,
+    "P(spadek>=20%)_%": 0.0,
+    "P(spadek>=50%)_%": 0.0
+   },
+   "2.0%": {
+    "P(strata)_%": 54.6,
+    "mediana_%": -0.57,
+    "p5_%": -2.18,
+    "p95_%": 5.1,
+    "P(spadek>=10%)_%": 0.0,
+    "P(spadek>=20%)_%": 0.0,
+    "P(spadek>=50%)_%": 0.0
+   }
+  },
+  "monte_carlo_12m": {
+   "months": 12,
+   "trades_per_path": 3,
+   "0.5%": {
+    "P(strata)_%": 51.9,
+    "mediana_%": -0.05,
+    "p5_%": -1.14,
+    "p95_%": 3.54,
+    "P(spadek>=10%)_%": 0.0,
+    "P(spadek>=20%)_%": 0.0,
+    "P(spadek>=50%)_%": 0.0
+   },
+   "1.0%": {
+    "P(strata)_%": 51.9,
+    "mediana_%": -0.09,
+    "p5_%": -2.27,
+    "p95_%": 7.08,
+    "P(spadek>=10%)_%": 0.0,
+    "P(spadek>=20%)_%": 0.0,
+    "P(spadek>=50%)_%": 0.0
+   },
+   "2.0%": {
+    "P(strata)_%": 52.0,
+    "mediana_%": -0.2,
+    "p5_%": -4.51,
+    "p95_%": 13.99,
+    "P(spadek>=10%)_%": 0.0,
+    "P(spadek>=20%)_%": 0.0,
+    "P(spadek>=50%)_%": 0.0
+   }
+  }
+ },
+ "classic_55_20_3atr": {
+  "long_only": {
+   "stats": {
+    "trades": 40,
+    "win_rate_%": 45.0,
+    "avg_R": 0.1447,
+    "total_R": 5.79,
+    "t_stat": 0.74,
+    "max_dd_R": -6.42,
+    "profit_factor": 1.34,
+    "return_%_at_0.5%": 2.86,
+    "max_dd_%_at_0.5%": -3.18
+   },
+   "by_year": {
+    "2008": -1.61,
+    "2009": 1.23,
+    "2010": 1.95,
+    "2011": 1.57,
+    "2012": 0.51,
+    "2013": -1.08,
+    "2014": -0.68,
+    "2015": -2.26,
+    "2016": 2.43,
+    "2017": -3.7,
+    "2018": 0.1,
+    "2019": 4.11,
+    "2020": 1.02,
+    "2021": -1.29,
+    "2022": 0.74,
+    "2023": -0.04,
+    "2024": 2.79
+   }
+  },
+  "long_short": {
+   "stats": {
+    "trades": 76,
+    "win_rate_%": 34.2,
+    "avg_R": -0.0927,
+    "total_R": -7.05,
+    "t_stat": -0.64,
+    "max_dd_R": -12.35,
+    "profit_factor": 0.82,
+    "return_%_at_0.5%": -3.61,
+    "max_dd_%_at_0.5%": -6.05
+   },
+   "by_year": {
+    "2008": -3.24,
+    "2009": 0.18,
+    "2010": -0.04,
+    "2011": -0.08,
+    "2012": 5.58,
+    "2013": -2.13,
+    "2014": -2.17,
+    "2015": -2.4,
+    "2016": 1.5,
+    "2017": -6.5,
+    "2018": 1.82,
+    "2019": 2.74,
+    "2020": -0.54,
+    "2021": -3.15,
+    "2022": 0.65,
+    "2023": -2.05,
+    "2024": 2.79
+   }
+  }
+ },
+ "latest_selection": {
+  "params": {
+   "entry_n": 55,
+   "exit_n": 20,
+   "stop_atr": 4.0,
+   "long_only": false
+  },
+  "train_stats": {
+   "trades": 10,
+   "win_rate_%": 60.0,
+   "avg_R": 0.2137,
+   "total_R": 2.14,
+   "t_stat": 0.8,
+   "max_dd_R": -1.6,
+   "profit_factor": 2.05,
+   "return_%_at_0.5%": 1.07,
+   "max_dd_%_at_0.5%": -0.8
+  },
+  "dukascopy_2011_2018": {
+   "trades": 33,
+   "win_rate_%": 36.4,
+   "avg_R": -0.1807,
+   "total_R": -5.96,
+   "t_stat": -1.0,
+   "max_dd_R": -9.84,
+   "profit_factor": 0.61,
+   "return_%_at_0.5%": -2.98,
+   "max_dd_%_at_0.5%": -4.82
+  }
+ }
+}

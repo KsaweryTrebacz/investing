@@ -1,5 +1,3 @@
-import pandas as pd
-
 from config import Config, Instrument
 from cycle import Context, run_cycle
 from oanda import demo_candles, demo_daily, demo_macro
