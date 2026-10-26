@@ -107,7 +107,6 @@ def breakout_returns(m15: pd.DataFrame, side_mode: str = "both") -> pd.Series:
     """Zakres 01:00-07:00 UTC; pierwsze przebicie w 07:00-20:00 otwiera pozycję po cenie przebicia
     (+ spread), wyjście o 20:00 UTC po bid/ask. Bez stopu."""
     d = m15.set_index("time")
-    day = d.index.normalize()
     hour = d.index.hour
     rng = d[(hour >= 1) & (hour < 7)]
     hi = ((rng["bid_h"] + rng["ask_h"]) / 2).groupby(rng.index.normalize()).max()
