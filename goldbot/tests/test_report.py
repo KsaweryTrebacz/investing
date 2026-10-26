@@ -24,7 +24,7 @@ def inputs(n):
 def config():
     cfg = Config(account=Account(currency="PLN", capital=20_000),
                  fx_rates={"USDPLN": {"rate": 3.65, "as_of": "2026-10-22", "source": "NBP"}})
-    cfg.instruments = {"XAU_USD": Instrument(group="metale", costs=Costs(
+    cfg.instruments = {"XAU_USD": Instrument(group="metale", strategy_validated=True, costs=Costs(
         source="tabela opłat", as_of="2026-10-01", margin_rate=0.05, commission_per_unit=0.0,
         financing_long_rate=-0.065, financing_short_rate=0.02, slippage_atr=0.1))}
     return cfg
@@ -89,3 +89,11 @@ def test_telegram_message_is_limited_and_keeps_disclaimer():
     r = dict(v["report"], decision_reasons=["x" * 5000])
     msg = render_telegram(r)
     assert len(msg) <= TELEGRAM_LIMIT and msg.endswith("Program nie składa zleceń.")
+
+
+def test_default_config_does_not_recommend_unvalidated_strategy():
+    m15, d1, usd, yld, now = inputs(SIGNAL_AT)
+    cfg = config()
+    cfg.instruments["XAU_USD"].strategy_validated = False
+    v = run_cycle(m15, d1, usd, yld, Store(), now=now, ctx=Context(cfg=cfg, positions={"positions": []}))["verdict"]
+    assert v["decision"] == "OBSERWACJA" and "WSTRZYMANY" in render_text(v["report"])

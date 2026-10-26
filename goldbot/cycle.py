@@ -74,7 +74,7 @@ def run_cycle(m15, d1, usd, yld, store, send=None, p: Params | None = None, now=
         plan = plan_trade(v, instr, cfg.account, fx_rate(cfg, instr.quote, ctx.fx_live), holding, now,
                           dividend=dividend_in(held))
     portfolio = portfolio_check(plan["loss"] if plan else None, ctx.instrument, cfg, ctx.positions, ctx.fx_live)
-    v = finalize(v, plan, portfolio, near_now(mine, now, guard_hours), guard_hours)
+    v = finalize(v, plan, portfolio, near_now(mine, now, guard_hours), guard_hours, instr.strategy_validated)
 
     d = direction(facts)
     rows = checks(facts, d, instr.macro, tp=plan["tp"] if plan else None)

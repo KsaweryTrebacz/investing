@@ -32,6 +32,9 @@
       "macro": true,
       "source": "oanda",
       "news": {"topics": "economy_monetary,economy_macro"},
+      "_strategy_opis": "strategy: nadpisania parametrów (np. sl_atr, session). strategy_validated: true dopiero po dodatnim wyniku validate na danych brokera; badanie w docs/research nie znalazło przewagi.",
+      "strategy": {},
+      "strategy_validated": false,
       "costs": {
         "_opis": "Dane z tabeli opłat brokera, w walucie kwotowania (USD). Stopy jako ułamki. Finansowanie jak w OANDA: ujemne = płacisz.",
         "source": null,

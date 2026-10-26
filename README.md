@@ -2,7 +2,9 @@
 
 Doradca i kontroler ryzyka dla CFD, domyślnie na złoto (XAU/USD). Co 15 minut liczy sygnał, sprawdza koszty, wielkość pozycji, ryzyko portfela, wydarzenia i wiadomości, a potem wydaje raport w 8 punktach ze statusem: możliwa transakcja, obserwacja albo brak transakcji. Nie składa ani nie modyfikuje zleceń, tylko podpowiada.
 
-To nie jest porada inwestycyjna. Strategia nie była jeszcze sprawdzona na prawdziwych danych. Celem jest jakość decyzji, nie liczba transakcji.
+To nie jest porada inwestycyjna. Celem jest jakość decyzji, nie liczba transakcji.
+
+**Wynik badań (docs/research/2026-10-26-optymalizacja-zloto.md):** na publicznych notowaniach złota 2004–2025 strategia M15 nie ma przewagi. Bez kosztów daje około 0R na transakcję, a po spreadzie i kosztach traci średnio 0,16R. Optymalizacja 2880 wariantów metodą walk-forward tego nie zmieniła. Dlatego domyślnie (`strategy_validated: false`) sygnał daje najwyżej status „obserwacja”.
 
 ## Jak liczy sygnał
 
@@ -38,7 +40,7 @@ Raport widać w konsoli, na dashboardzie i w Telegramie. Nagłówek podaje źró
 ## Status
 
 - **Możliwa transakcja**: sygnał zgodny z reżimem, zabezpieczenia przeszły, znane są kapitał i kurs waluty, pozycja mieści się w limitach portfela.
-- **Obserwacja**: reżim wskazuje kierunek, ale brak sygnału wejścia; albo sygnał jest, ale blokuje go reżim, ważne wydarzenie (domyślnie 2 h przed lub po), brak kapitału, kursu, pliku pozycji, albo w portfelu jest pozycja bez SL.
+- **Obserwacja**: reżim wskazuje kierunek, ale brak sygnału wejścia; albo sygnał jest, ale strategia nie jest zwalidowana (`strategy_validated: false`), blokuje go reżim, ważne wydarzenie (domyślnie 2 h przed lub po), brak kapitału, kursu, pliku pozycji, albo w portfelu jest pozycja bez SL.
 - **Brak transakcji**: reżim neutralny bez sygnału, nieaktualne dane, otwarta poprzednia rada, dzienny limit strat, za szeroki spread, pozycja mniejsza niż minimalna albo przekroczony limit ryzyka portfela.
 
 ## Koszty i ryzyko
@@ -116,6 +118,12 @@ Każda komenda przyjmuje `--instrument X` (np. `--instrument SPX500_USD`); każd
 
 Formaty odpowiedzi FRED (kalendarz) i Alpha Vantage są przyjęte z dokumentacji i przetestowane na przykładowych odpowiedziach, nie na żywym API.
 
+## Badania na danych historycznych
+
+`goldbot/research/` testuje strategię na publicznych notowaniach złota: pobranie danych (`download.sh`), przeliczenie czasu serwera na UTC, model spreadu z prawdziwych bid/ask Dukascopy, optymalizacja walk-forward (`study.py`), Monte Carlo ryzyka utraty kapitału, porównanie z losowymi wejściami i alternatywna strategia trendowa na D1 (`trend.py`). Wyniki i wnioski: `docs/research/`.
+
+Filtry strategii (sesja, zgodność EMA 20/50, zapas do szczytu lub dołka, wyłączenie reżimu) ustawia się w `config.json` w sekcji `strategy` instrumentu; domyślnie są wyłączone. `strategy_validated: true` ustaw dopiero wtedy, gdy `validate` na danych Twojego brokera da dodatni wynik na okresie kontrolnym po kosztach.
+
 ## Uruchamianie co 15 minut
 
 `install_task.ps1` dodaje zadanie do Harmonogramu zadań Windows (`GoldAdvisorCycle`), które odpala `main.py cycle` co 15 minut. Trzeba go uruchomić ręcznie:
@@ -160,5 +168,7 @@ goldbot/
   notify.py        Telegram
   store.py         SQLite
   dashboard.py     serwer dashboardu (web/index.html)
+  research/        badania na danych historycznych (dane, walk-forward, Monte Carlo, trend D1)
 docs/superpowers/  specyfikacje i plany
+docs/research/     wyniki badań
 ```

@@ -8,6 +8,10 @@ from regime import REGIME_BUY, REGIME_SELL
 
 POSSIBLE, WATCH, NO_TRADE = "MOZLIWA_TRANSAKCJA", "OBSERWACJA", "BRAK_TRANSAKCJI"
 DECISION_PL = {POSSIBLE: "możliwa transakcja", WATCH: "obserwacja", NO_TRADE: "brak transakcji"}
+UNVALIDATED = ("Strategia nie ma potwierdzonej przewagi poza próbą: w badaniu na publicznych danych złota 2008-2024 "
+               "średni wynik to -0,16R na transakcję po kosztach, a bez kosztów około 0R (docs/research). "
+               "Rada jest tylko do obserwacji; strategy_validated=true ustaw dopiero po dodatnim wyniku "
+               "validate na danych Twojego brokera.")
 BLOCK_PL = {"stale": "dane są nieaktualne", "open_advice": "poprzednia rada jest jeszcze otwarta",
             "daily_loss": "osiągnięty dzienny limit strat rad", "spread": "spread jest za szeroki względem ATR"}
 
@@ -31,14 +35,18 @@ def risk_blocks(plan: dict, portfolio: dict, near: list, guard_hours: float) -> 
     return hard, soft
 
 
-def finalize(v: dict, plan: dict | None, portfolio: dict, near: list, guard_hours: float) -> dict:
+def finalize(v: dict, plan: dict | None, portfolio: dict, near: list, guard_hours: float,
+             validated: bool = True) -> dict:
     """v: werdykt po guards.apply_guards. Zwraca kopię z `decision` i `decision_reasons`.
 
     Rada handlowa zatrzymana przez blokadę ryzyka zamienia się w CZEKAJ, a powód trafia do uzasadnienia.
+    Strategia bez walidacji (validated=False) daje najwyżej obserwację.
     """
     out = dict(v)
     if v["verdict"] in TRADE:
         hard, soft = risk_blocks(plan, portfolio, near, guard_hours)
+        if not validated:
+            soft.append(UNVALIDATED)
         if not (hard or soft):
             return dict(out, decision=POSSIBLE, decision_reasons=[
                 "Sygnał M15 zgodny z reżimem dziennym; zabezpieczenia i limity ryzyka spełnione."])

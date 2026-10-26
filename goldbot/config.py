@@ -49,6 +49,7 @@ class Instrument:
     symbol: str | None = None          # symbol spółki w Alpha Vantage (wyniki, dywidendy)
     news: dict = field(default_factory=dict)  # parametry NEWS_SENTIMENT: {"tickers": ..., "topics": ...}
     strategy: dict = field(default_factory=dict)  # nadpisania strategy.Params, np. {"sl_atr": 2.0}
+    strategy_validated: bool = False   # True dopiero po dodatnim wyniku poza próbą (validate na danych brokera)
     costs: Costs = field(default_factory=Costs)
 
     @property

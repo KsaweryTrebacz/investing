@@ -49,3 +49,10 @@ def test_waiting_states():
     assert finalize(wait(regime="NEUTRALNY", signal_raw=1), None, PF_OK, [], 2)["decision"] == WATCH
     v = finalize(wait(regime="NEUTRALNY"), None, PF_OK, [], 2)
     assert v["decision"] == NO_TRADE and "neutralny" in v["decision_reasons"][0]
+
+
+def test_unvalidated_strategy_is_only_watch():
+    v = finalize(TRADE, PLAN, PF_OK, [], 2, validated=False)
+    assert v["decision"] == WATCH and v["verdict"] == "CZEKAJ" and v["held"] == "KUP"
+    assert "potwierdzonej przewagi" in v["decision_reasons"][-1]
+    assert finalize(wait(), None, PF_OK, [], 2, validated=False)["decision"] == WATCH  # bez sygnału bez zmian
