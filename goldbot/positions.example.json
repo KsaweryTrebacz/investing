@@ -1,6 +1,7 @@
 {
-  "_opis": "Skopiuj jako positions.json i wpisz otwarte pozycje z platformy brokera. Pusta lista = brak otwartych pozycji. Pozycja bez sl ma ryzyko nieznane.",
+  "_opis": "Skopiuj jako positions.json i wpisz otwarte pozycje z platformy brokera. Pusta lista = brak otwartych pozycji. Pozycja bez sl ma ryzyko nieznane. equity: bieżąca wartość rachunku z platformy (tryb trend_d1 liczy z niej wielkość pozycji; bez niej używa capital z config.json).",
   "as_of": null,
+  "equity": null,
   "source": "ręcznie z platformy brokera",
   "positions": [],
   "_przyklad_pozycji": {"instrument": "XAU_USD", "side": "LONG", "units": 2, "entry": 4010.5, "sl": 3995.0, "group": "metale szlachetne"}

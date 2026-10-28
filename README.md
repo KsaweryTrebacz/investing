@@ -15,6 +15,19 @@ Dwa poziomy:
 
 Najpierw liczy się trend wyższego interwału, wejście potwierdza niższy. Żaden pojedynczy wskaźnik nie wystarcza.
 
+## Tryb trend_d1: momentum 120 dni z dźwignią (momentum.py)
+
+Druga strategia, wybrana w badaniach (docs/research, punkt 10), włączana w `config.json` przez `"mode": "trend_d1"` instrumentu:
+
+- Kierunek: LONG, gdy zamknięcie dnia jest wyżej niż 120 dni handlowych wcześniej, inaczej bez pozycji (`long_only`).
+- Wielkość: dźwignia = docelowa zmienność roczna (`target_vol`, domyślnie 50%) / zmienność z 20 dni, nie więcej niż pozwala depozyt brokera (1:50) i `max_leverage`. Pozycja docelowa = dźwignia × kapitał.
+- Raz dziennie, po zamknięciu świecy D1 (17:00 Nowy Jork), program porównuje pozycję docelową z obecną z `positions.json` i radzi: OTWÓRZ LONG, ZWIĘKSZ, ZMNIEJSZ, ZAMKNIJ, UTRZYMAJ albo BEZ POZYCJI. Zmiany mniejsze niż `rebalance_band` (10%) są pomijane.
+- Strategia nie ma SL ani TP. Wychodzi, gdy momentum spadnie do zera. Raport podaje cenę likwidacji przez brokera, typowy dzienny ruch i stratę przy spadku ceny o 5% w walucie rachunku, dzienny koszt finansowania i wynik na dostępnej historii D1.
+- Status: możliwa transakcja, gdy trzeba zmienić pozycję; obserwacja, gdy pozycja jest zgodna z docelową albo brak pliku pozycji (nie wiadomo, ile już masz); brak transakcji, gdy momentum ≤ 0 bez pozycji, dane D1 są nieaktualne albo brak wolnego depozytu.
+- `python main.py validate` w tym trybie liczy strategię na historii D1 brokera: całość, dwie połowy i porównanie z trzymaniem złota.
+
+W badaniu 2008–2024 cel 50% dał kapitał ×3,46 przy finansowaniu −5%, ale z największym spadkiem −86%. Cel 30% dał ×3,23 przy spadku −65%. Wynik zależy od tego, czy złoto dalej będzie trendować, bo sam filtr momentum nie jest istotny statystycznie.
+
 ## Analiza do raportu
 
 Nie zmienia reguł sygnału, opisuje rynek:
@@ -154,6 +167,7 @@ goldbot/
   guards.py        zabezpieczenia danych i rad
   decision.py      status decyzji i blokady ryzyka
   report.py        raport w 8 punktach
+  momentum.py      strategia trendowa D1 (tryb trend_d1)
   config.py        konfiguracja rachunku, kosztów i instrumentów
   costs.py         koszty CFD i czas utrzymania
   risk.py          wielkość pozycji, depozyt, ryzyko portfela

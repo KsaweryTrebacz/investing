@@ -5,6 +5,7 @@ from analysis import DIRECTION_PL, direction, strength
 from config import Account, Instrument
 from costs import per_unit_costs
 from decision import DECISION_PL
+from momentum import MODE
 from regime import REGIME_PL
 from risk import GAP_NOTE
 from strategy import Params
@@ -90,7 +91,9 @@ def _num(x, fmt="{:+.2f}"):
 
 def render_text(r: dict) -> str:
     """Raport jako tekst (konsola, Telegram)."""
-    L = [f"{r['instrument']} | świeca M15 {r['time'][:16].replace('T', ' ')} UTC | "
+    trend_mode = r.get("mode") == MODE
+    candle = "świeca D1 od" if trend_mode else "świeca M15"
+    L = [f"{r['instrument']} | {candle} {r['time'][:16].replace('T', ' ')} UTC | "
          f"STATUS: {DECISION_PL[r['decision']].upper()}"]
     data = r["data"] or {}
     for name, info in data.items():
@@ -98,8 +101,13 @@ def render_text(r: dict) -> str:
             L.append(f"Dane, {name}: " + ", ".join(f"{k} {v}" for k, v in info.items() if v is not None))
 
     t = r["trend"]
-    L.append(f"1. Trend i siła sygnału: {t['direction']}; reżim dzienny {t['regime']}; {t['strength']['text']} "
-             "(liczba warunków, nie prawdopodobieństwo).")
+    if trend_mode:
+        L.append(f"1. Trend i siła sygnału (strategia trendowa D1): {t['direction']}; momentum {t['lookback']} dni "
+                 f"{t['momentum']:+.1%} (zamknięcie {t['close']:.2f} wobec {t['lookback_close']:.2f}); zmienność "
+                 f"{t['vol']:.1%} rocznie; sygnał bez zmian od {t['since_days']} dni; {t['strength']['text']}.")
+    else:
+        L.append(f"1. Trend i siła sygnału: {t['direction']}; reżim dzienny {t['regime']}; {t['strength']['text']} "
+                 "(liczba warunków, nie prawdopodobieństwo).")
 
     L.append("2. Potwierdzenia i sprzeczności:")
     for mark, ok in (("✓", True), ("✗", False), ("·", None)):
@@ -124,6 +132,12 @@ def render_text(r: dict) -> str:
     for err in e["errors"]:
         L.append(f"   Nie pobrano: {err}")
     L.append(f"   {e['note']}")
+
+    if trend_mode:
+        L += _trend_sections(r)
+        L.append(f"8. Status: {DECISION_PL[r['decision']].upper()}. " + " ".join(r["decision_reasons"]))
+        L.append(DISCLAIMER)
+        return "\n".join(L)
 
     c = r["costs"]
     q = c["quote"]
@@ -186,6 +200,89 @@ def render_text(r: dict) -> str:
     L.append(f"8. Status: {DECISION_PL[r['decision']].upper()}. " + " ".join(r["decision_reasons"]))
     L.append(DISCLAIMER)
     return "\n".join(L)
+
+
+def _trend_sections(r: dict) -> list:
+    """Punkty 4-7 raportu strategii trendowej D1."""
+    L, c, pl, m = [], r["costs"], r["plan"], r["pnl"]
+    cur = r["currency"]
+    fin = "brak danych" if c["financing_rate"] is None else f"{c['financing_rate']:+.2%} rocznie"
+    L.append(f"4. Koszty i czas utrzymania: spread {c['spread_pct']:.3%} ceny przy każdej zmianie wielkości; "
+             f"finansowanie pozycji {fin} od całej wartości, naliczane codziennie (środa potrójnie)"
+             + (f", dziennie ok. {_money(-c['financing_day'], cur)}" if c.get("financing_day") else "") + ".")
+    L.append(f"   czas utrzymania: do zmiany znaku momentum; okresy LONG trwały średnio "
+             f"{c['avg_long_days'] if c['avg_long_days'] else '?'} dni na dostępnej historii. Wielkość przeliczana "
+             "raz dziennie po zamknięciu D1.")
+    L.append(f"   źródło kosztów: {c['source'] or 'brak'}, stan na {c['as_of'] or 'brak daty'}.")
+    if c["missing"]:
+        L.append("   BRAK DANYCH: " + ", ".join(c["missing"]) + ". Wyniki poniżej są orientacyjne, nie dokładne.")
+    if pl:
+        cur_txt = "nieznana (brak pliku pozycji)" if pl["current_units"] is None else f"{pl['current_units']:g} jedn."
+        chg = "" if pl["change_units"] is None else f", zmiana {pl['change_units']:+g} jedn."
+        L.append(f"5. Plan: {pl['action']} | pozycja docelowa {pl['target_units']:g} jedn., obecna {cur_txt}{chg}; "
+                 f"cena odniesienia {pl['price']:.2f} (zamknięcie D1). Bez SL i TP: wyjście, gdy momentum spadnie do "
+                 "zera; wielkość dopasowywana codziennie do zmienności.")
+    else:
+        L.append("5. Plan: brak, nie da się policzyć pozycji docelowej.")
+    if m and m.get("notional") is not None:
+        fx = m["fx"]
+        L.append(f"6. Zysk i strata w walucie rachunku: kapitał {_money(m['equity'], cur)} ({m['equity_source']}); "
+                 f"wartość pozycji docelowej {_money(m['notional'], cur)}, dźwignia {m['leverage']:.2f}:1 z dostępnych "
+                 f"{m['max_leverage']:.0f}:1, depozyt {_money(m['margin'], cur)}, wolny depozyt {_money(m['free_margin'], cur)}; "
+                 f"kurs {fx['rate']:.4f} ({fx['source']}).")
+        if m["notional"]:
+            L.append(f"   Typowy ruch dzienny (1 odchylenie): ±{_money(m['day_sigma'], cur)} "
+                     f"({m['day_sigma'] / m['equity']:.1%} kapitału); spadek ceny o 5%: −{_money(m['move5'], cur)} "
+                     f"({m['move5'] / m['equity']:.0%} kapitału); broker zlikwiduje pozycję przy cenie "
+                     f"{m['liquidation_price']:.2f} (ruch {m['liquidation_move']:+.1%}).")
+    else:
+        L.append("6. Zysk i strata: nie da się policzyć (brak kapitału, kursu albo stopy depozytu).")
+    h = r["history"]
+    if h.get("recent"):
+        x = h["recent"]
+        L.append(f"   Na dostępnych danych D1 {x['from']} – {x['to']}: kapitał x{x['wealth_x']}, największy spadek "
+                 f"{x['max_dd_%']}%, średnia dźwignia w pozycji {x['avg_leverage']}:1.")
+    L.append(f"   {h['research']}")
+    L.append(f"   {r['gap_note']}")
+    L.append("7. Warunki unieważniające scenariusz:")
+    L += [f"   - {x}" for x in r["invalidation"]]
+    return L
+
+
+def build_trend_report(*, instrument: str, v: dict, sig: dict, adv: dict | None, plan: dict | None, facts: dict,
+                       rows: list, window: list, news: list, errors: list, meta: dict, instr: Instrument,
+                       account: Account, now, missing: list, history: dict) -> dict:
+    """Raport w 8 punktach dla strategii trendowej D1 (momentum.py)."""
+    side = sig["side"]
+    rate = instr.costs.financing_long_rate if side >= 0 else instr.costs.financing_short_rate
+    inval = ([f"Zamknięcie D1 poniżej {sig['lookback_close']:.2f} (cena sprzed {sig['lookback']} dni): momentum spada "
+              "do zera, pozycja do zamknięcia." if side == 1 else
+              f"Zamknięcie D1 powyżej {sig['lookback_close']:.2f}: momentum dodatnie, strategia otworzy LONG."]
+             + ["Wzrost zmienności obniża dźwignię docelową: pozycja do zmniejszenia przy kolejnym przeliczeniu."]
+             + ([f"Cena {plan['liquidation_price']:.2f}: likwidacja przez brokera (strategia nie ma stopu)."]
+                if plan and plan.get("liquidation_price") else [])
+             + [f"Wydarzenie o wysokiej wadze (ryzyko luki): {e['name']} {e['start'][:16].replace('T', ' ')} UTC"
+                for e in window if e["importance"] == "wysoka"])
+    return {
+        "mode": MODE, "instrument": instrument, "currency": account.currency, "time": v["time"],
+        "generated_at": pd.Timestamp(now).isoformat(), "decision": v["decision"],
+        "decision_reasons": v["decision_reasons"], "verdict": v["verdict"], "data": meta,
+        "trend": {"direction": "LONG (kupno)" if side == 1 else "SHORT (sprzedaż)" if side == -1 else "bez pozycji",
+                  "regime": REGIME_PL[v["regime"]], "strength": strength(rows),
+                  **{k: sig[k] for k in ("momentum", "lookback", "close", "lookback_close", "vol", "since_days")}},
+        "checks": rows,
+        "events": {"upcoming": window, "news": news, "errors": errors, "note": FACTS_NOTE,
+                   "change_24h": facts["change_24h"], "change_since_d1": facts["change_since_d1"],
+                   "d1_atr": facts["d1"]["atr"], "d1_close_time": facts["d1_close_time"]},
+        "costs": {"spread_pct": sig["spread"], "quote": instr.quote, "financing_rate": rate,
+                  "financing_day": plan.get("financing_day") if plan else None, "avg_long_days": sig["avg_long_days"],
+                  "source": instr.costs.source, "as_of": instr.costs.as_of, "missing": missing},
+        "plan": None if adv is None else {"action": adv["action"], "target_units": adv["target_units"],
+                                          "current_units": adv["current_units"], "change_units": adv["change_units"],
+                                          "price": sig["close"]},
+        "pnl": plan, "history": history, "portfolio": None, "gap_note": GAP_NOTE, "invalidation": inval,
+        "reasoning": v["reasoning"],
+    }
 
 
 def render_telegram(r: dict) -> str:

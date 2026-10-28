@@ -49,6 +49,8 @@ class Instrument:
     csv: dict = field(default_factory=dict)   # {"m15": ścieżka, "d1": ścieżka, "spread": typowy spread}
     symbol: str | None = None          # symbol spółki w Alpha Vantage (wyniki, dywidendy)
     news: dict = field(default_factory=dict)  # parametry NEWS_SENTIMENT: {"tickers": ..., "topics": ...}
+    mode: str = "m15"                  # "m15": doradca M15 z SL/TP; "trend_d1": momentum D1 z dźwignią (momentum.py)
+    trend: dict = field(default_factory=dict)     # nadpisania momentum.TrendParams, np. {"target_vol": 0.3}
     strategy: dict = field(default_factory=dict)  # nadpisania strategy.Params, np. {"sl_atr": 2.0}
     strategy_validated: bool = False   # True dopiero po dodatnim wyniku poza próbą (validate na danych brokera)
     costs: Costs = field(default_factory=Costs)

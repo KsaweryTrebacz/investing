@@ -12,6 +12,7 @@ UNVALIDATED = ("Strategia nie ma potwierdzonej przewagi poza próbą: w badaniu 
                "średni wynik to -0,16R na transakcję po kosztach, a bez kosztów około 0R (docs/research). "
                "Rada jest tylko do obserwacji; strategy_validated=true ustaw dopiero po dodatnim wyniku "
                "validate na danych Twojego brokera.")
+TREND_ACTIONS = ("OTWÓRZ LONG", "OTWÓRZ SHORT", "ZWIĘKSZ", "ZMNIEJSZ", "ZAMKNIJ", "ODWRÓĆ")
 BLOCK_PL = {"stale": "dane są nieaktualne", "open_advice": "poprzednia rada jest jeszcze otwarta",
             "daily_loss": "osiągnięty dzienny limit strat rad", "spread": "spread jest za szeroki względem ATR"}
 
@@ -70,3 +71,25 @@ def finalize(v: dict, plan: dict | None, portfolio: dict, near: list, guard_hour
     if v.get("signal_raw"):
         return dict(out, decision=WATCH, decision_reasons=["Sygnał M15 bez potwierdzenia reżimu dziennego (neutralny)."])
     return dict(out, decision=NO_TRADE, decision_reasons=["Reżim dzienny neutralny i brak sygnału M15."])
+
+
+def finalize_trend(sig: dict, adv: dict | None, plan: dict | None, stale: bool, missing: list,
+                   band: float) -> tuple[str, list]:
+    """Status rady strategii trendowej D1 (momentum.py) i jego powody."""
+    if stale:
+        return NO_TRADE, ["Brak transakcji: ostatnia zamknięta świeca D1 jest nieaktualna."]
+    if adv is None:
+        return WATCH, ["Nie można policzyć pozycji docelowej, brak: " + ", ".join(missing) + "."]
+    if plan and plan.get("free_margin") is not None and plan["free_margin"] < 0:
+        return NO_TRADE, [f"Brak wolnego depozytu: pozycja docelowa wymaga {plan['margin']:.2f} {plan['currency']}, "
+                          f"wolne po otwarciu {plan['free_margin']:.2f}."]
+    a, mom = adv["action"], f"momentum {sig['lookback']} dni {sig['momentum']:+.1%}"
+    if a == "BEZ POZYCJI":
+        return NO_TRADE, [f"Brak transakcji: {mom}, strategia nie trzyma pozycji."]
+    if a == "UTRZYMAJ":
+        return WATCH, [f"Utrzymaj pozycję: różnica wobec docelowej mieści się w {band:.0%}, transakcja niepotrzebna."]
+    if not adv["current_known"]:
+        return WATCH, [f"{a} według sygnału ({mom}), ale brak pliku pozycji: nie wiadomo, ile już masz, "
+                       "więc rada jest tylko do obserwacji."]
+    return POSSIBLE, [f"{a}: {mom}, dźwignia docelowa {sig['leverage']:.2f}:1 przy celu zmienności "
+                      f"{sig['target_vol']:.0%}."]

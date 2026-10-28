@@ -190,6 +190,7 @@ Stała docelowa zmienność, momentum 120 dni, finansowanie −5% (2008–2024, 
 - `strategy_validated` w konfiguracji instrumentu (domyślnie `false`): sygnał M15 daje najwyżej „obserwację”, a plan jest pokazany jako wstrzymany, z odnośnikiem do tego raportu. Zmienić na `true` można dopiero, gdy `python main.py validate` na danych Twojego brokera da dodatni wynik na okresie kontrolnym po kosztach i przy rozsądnej liczbie transakcji.
 - Filtry jakości (sesja, EMA 20/50, zapas do szczytu lub dołka, wyłączenie reżimu) są dostępne w sekcji `strategy` konfiguracji, domyślnie wyłączone. Żaden nie dał poprawy poza próbą.
 - Parametry domyślne strategii bez zmian: żaden wariant nie był lepszy w sposób powtarzalny.
+- Strategia z punktu 10 (momentum 120 dni, docelowa zmienność 50%) jest wbudowana jako tryb `trend_d1` (`goldbot/momentum.py`, symulacja wspólna z `research/sizing.py`).
 - Dźwignia: raport pokazuje użytą dźwignię, wolny depozyt i cenę likwidacji przez brokera. Brak wolnego depozytu albo SL dalej niż poziom likwidacji blokuje radę. Przy ryzyku 0,5% na transakcję pozycja zwykle ma dźwignię kilka do 1, a likwidacja wypada kilkadziesiąt procent od ceny wejścia.
 
 ## Ograniczenia

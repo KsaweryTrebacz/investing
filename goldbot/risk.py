@@ -123,10 +123,16 @@ def position_risk(p: dict, cfg: Config, fx_live: dict | None = None) -> float | 
     return float(p["units"]) * max(0.0, _side(p) * (p["entry"] - p["sl"])) * fx["rate"]
 
 
-def positions_margin(cfg: Config, positions: dict | None, fx_live: dict | None = None) -> tuple[float, list]:
-    """Depozyt zajęty przez otwarte pozycje w walucie rachunku i lista pozycji, dla których jest nieznany."""
+def positions_margin(cfg: Config, positions: dict | None, fx_live: dict | None = None,
+                     exclude: str | None = None) -> tuple[float, list]:
+    """Depozyt zajęty przez otwarte pozycje w walucie rachunku i lista pozycji, dla których jest nieznany.
+
+    exclude: instrument pominięty (np. ten, którego pozycja docelowa właśnie jest liczona).
+    """
     total, unknown = 0.0, []
     for p in (positions or {}).get("positions", []):
+        if p["instrument"] == exclude:
+            continue
         instr = cfg.instrument(p["instrument"])
         fx = fx_rate(cfg, instr.quote, fx_live)
         if instr.costs.margin_rate is None or fx is None:

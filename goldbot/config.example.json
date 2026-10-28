@@ -33,7 +33,11 @@
       "macro": true,
       "source": "oanda",
       "news": {"topics": "economy_monetary,economy_macro"},
-      "_strategy_opis": "strategy: nadpisania parametrów (np. sl_atr, session). strategy_validated: true dopiero po dodatnim wyniku validate na danych brokera; badanie w docs/research nie znalazło przewagi.",
+      "_mode_opis": "trend_d1: momentum 120 dni z dźwignią dopasowaną do zmienności (momentum.py, docs/research pkt 10). m15: doradca M15 z SL/TP (bez potwierdzonej przewagi).",
+      "mode": "trend_d1",
+      "_trend_opis": "target_vol 0.5 = optimum wzrostu w badaniu (spadki do -86%); 0.3 daje ok. 93% tego wzrostu przy spadku ok. -65%. max_leverage: dodatkowy limit dźwigni.",
+      "trend": {"lookback": 120, "vol_window": 20, "target_vol": 0.5, "max_leverage": null, "long_only": true, "rebalance_band": 0.1},
+      "_strategy_opis": "Tylko tryb m15. strategy: nadpisania parametrów (np. sl_atr, session). strategy_validated: true dopiero po dodatnim wyniku validate na danych brokera; badanie w docs/research nie znalazło przewagi.",
       "strategy": {},
       "strategy_validated": false,
       "costs": {

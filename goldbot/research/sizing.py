@@ -15,60 +15,14 @@ import os
 import numpy as np
 import pandas as pd
 
+from momentum import daily_frame, simulate, vol_leverage  # noqa: F401 (wspólne z programem)
 from research import edges as E
 from research.datasets import daily_from_m15, hourly_spread_profile, load_broker_m15, load_dukascopy
 
-NY = "America/New_York"
 GRID = (0.25, 0.5, 1, 1.5, 2, 3, 4, 5, 7, 10, 15, 20, 30, 50)
 VOL_TARGETS = (0.05, 0.1, 0.15, 0.2, 0.3, 0.5)
 FIXED_TARGETS = (0.1, 0.2, 0.3, 0.5, 0.75, 1.0, 1.5, 2.0)
 MAX_LEV = 50.0
-
-
-def daily_frame(d1: pd.DataFrame) -> pd.DataFrame:
-    """Dzienne ceny środkowe, spread względny i etykieta dnia handlowego (jak w research.edges)."""
-    d = d1.reset_index(drop=True)
-    out = pd.DataFrame({k: ((d[f"bid_{k}"] + d[f"ask_{k}"]) / 2).to_numpy() for k in "ohlc"})
-    out["spread"] = ((d["ask_c"] - d["bid_c"]) / out["c"]).to_numpy()
-    out.index = d["time"].dt.tz_convert(NY).dt.normalize().dt.tz_localize(None) + pd.Timedelta(days=1)
-    return out
-
-
-def simulate(day: pd.DataFrame, pos: np.ndarray, lev: np.ndarray, margin_rate: float = 0.02, closeout: float = 0.5,
-             long_rate: float = -0.05, short_rate: float = -0.01) -> pd.Series:
-    """Kapitał na koniec każdego dnia (start 1). pos i lev ustalone na zamknięciu dnia t-1, działają w dniu t."""
-    o, h, low, c, spr = (day[k].to_numpy() for k in ("o", "h", "l", "c", "spread"))
-    triple = (day.index.weekday == 2)
-    eq, units, out = 1.0, 0.0, np.empty(len(day))
-    out[0] = eq
-    for t in range(1, len(day)):
-        if eq <= 1e-6:
-            out[t:] = 0.0
-            break
-        ref = c[t - 1]
-        target = pos[t - 1] * min(lev[t - 1], MAX_LEV) * eq / ref if np.isfinite(lev[t - 1]) else 0.0
-        eq -= abs(target - units) * ref * spr[t - 1] / 2
-        units = target
-        if units == 0.0:
-            out[t] = eq
-            continue
-        side, u = (1, units) if units > 0 else (-1, -units)
-        if side == 1:   # eq + u(P - ref) = c*m*u*P
-            p_star = (u * ref - eq) / (u * (1 - closeout * margin_rate))
-            gap, worst = o[t] <= p_star, low[t] <= p_star
-        else:
-            p_star = (eq + u * ref) / (u * (1 + closeout * margin_rate))
-            gap, worst = o[t] >= p_star, h[t] >= p_star
-        if gap or worst:
-            fill = o[t] if gap else p_star
-            eq = max(0.0, eq + units * (fill - ref) - u * fill * spr[t] / 2)
-            units = 0.0
-        else:
-            rate = long_rate if side == 1 else short_rate
-            eq += units * (c[t] - ref) + u * c[t] * rate / 365 * (3 if triple[t] else 1)
-            eq = max(eq, 0.0)
-        out[t] = eq
-    return pd.Series(out, index=day.index)
 
 
 def run(day, pos, lev, start, end, fin) -> pd.Series:
@@ -82,13 +36,6 @@ def wealth(day, pos, lev, start, end, fin) -> float:
     """Mnożnik kapitału świeżego rachunku w okresie [start, end)."""
     c = run(day, pos, lev, start, end, fin)
     return float(c.iloc[-1]) if len(c) > 1 else 1.0
-
-
-def vol_leverage(day: pd.DataFrame, target: float, window: int = 20) -> np.ndarray:
-    """Dźwignia = docelowa zmienność roczna / zmienność z `window` dni (znana na zamknięciu dnia)."""
-    r = np.log(day["c"]).diff()
-    vol = r.rolling(window).std() * np.sqrt(252)
-    return (target / vol).clip(upper=MAX_LEV).fillna(0.0).to_numpy()
 
 
 def kelly_leverage(day: pd.DataFrame, pos: np.ndarray, fraction: float = 0.5, window: int = 500,

@@ -11,6 +11,7 @@ import sys
 import pandas as pd
 
 from config import DEFAULT_INSTRUMENT, Config, Instrument, load_config
+from momentum import MODE
 from costs import cost_coverage
 from guards import DataError, validate_candles
 from macro import USD_SERIES, YIELD_SERIES, fetch_series
@@ -138,6 +139,8 @@ def cmd_validate(args):
     except DataError as e:
         print(f"Dane odrzucone: {e}")
         return 1
+    if instr.mode == MODE:
+        return validate_trend(cfg, instr, d1)
     p = Params(**{**instr.strategy, "risk_per_trade": cfg.account.risk_per_trade})
     df = prepare(m15, d1, usd, yld, p, macro=instr.macro)
     res = walk_forward(df, p, split=args.split, costs=instr.costs)
@@ -151,6 +154,37 @@ def cmd_validate(args):
         print("BRAK DANYCH o kosztach: " + ", ".join(missing) + ". Wynik jest zawyżony o te koszty, "
               "uzupełnij je w config.json (sekcja costs instrumentu).")
     print("Liczy się okres out_of_sample. Mało transakcji oznacza wynik bez znaczenia statystycznego.")
+    return 0
+
+
+def validate_trend(cfg: Config, instr: Instrument, d1) -> int:
+    """Walidacja strategii trendowej D1 na historii brokera: całość, połowy, porównanie z trzymaniem złota."""
+    import momentum
+
+    tp = momentum.TrendParams(**instr.trend)
+    c = instr.costs
+    rates = (c.financing_long_rate, c.financing_short_rate)
+    fin = (rates[0] if rates[0] is not None else -0.05, rates[1] if rates[1] is not None else -0.01)
+    margin = c.margin_rate or 0.02
+    try:
+        res = momentum.validate(d1, tp, margin, cfg.account.margin_closeout, *fin)
+    except ValueError as e:
+        print(f"Dane odrzucone: {e}")
+        return 1
+    print(f"{instr.name}: strategia trendowa D1, momentum {tp.lookback} dni, cel zmienności {tp.target_vol:.0%}, "
+          f"dźwignia maks. {momentum.leverage_cap(tp, margin):.0f}:1")
+    for name in ("calosc", "pierwsza_polowa", "druga_polowa", "kup_i_trzymaj_1x"):
+        r = res[name]
+        print(f"  {name:18s} {r['od']} -> {r['do']}: kapitał x{r['kapital_x']}, roczne tempo {r['cagr_%']}%, "
+              f"największy spadek {r['max_spadek_%']}%")
+    print(f"  zmiany kierunku: {res['zmiany_kierunku']}, dni w pozycji: {res['dni_w_pozycji_%']}%, "
+          f"średnia dźwignia w pozycji: {res['srednia_dzwignia']}:1")
+    if None in rates:
+        print("BRAK DANYCH o finansowaniu: przyjęto LONG -5%, SHORT -1% rocznie (założenie z badań). "
+              "Uzupełnij costs.financing_*_rate w config.json.")
+    if c.margin_rate is None:
+        print("BRAK stopy depozytu: przyjęto 1:50 (margin_rate 0.02).")
+    print("Wynik zależy od trendu złota w tym okresie; spadki przy tej dźwigni są duże (patrz docs/research, pkt 10).")
     return 0
 
 
