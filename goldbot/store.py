@@ -88,6 +88,10 @@ class Store:
         return [dict(r) for r in self.db.execute(
             f"SELECT * FROM verdicts WHERE status='OPEN'{k} ORDER BY time", a)]
 
+    def update_verdict_sl(self, vid: int, sl: float):
+        with self.db:
+            self.db.execute("UPDATE verdicts SET sl=? WHERE id=?", (float(sl), vid))
+
     def close_verdict(self, vid: int, status: str, outcome_r: float, resolved_time: str):
         with self.db:
             self.db.execute("UPDATE verdicts SET status=?, outcome_r=?, resolved_time=? WHERE id=?",

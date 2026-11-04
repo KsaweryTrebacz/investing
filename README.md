@@ -15,23 +15,27 @@ Dwie warstwy, każda ma własne komendy:
 
 Model ma dwa tryby: „long" (w złocie, gdy prawdopodobieństwo wzrostu przekracza próg, inaczej w gotówce) i „ls" (długa/krótka). Tryb, próg i rodzaj modelu zostały wybrane **wyłącznie po okresie strojenia** (prognozy do końca 2020). Lata 2021-2026 to okres kontrolny, który nie brał udziału w wyborze. Gra na spadki (tryb „ls") nie ma przewagi i jest wyłączona.
 
+### Stop kroczący
+
+Przy otwartej radzie KUP program wyjście podpowiada w dwóch sytuacjach: prognoza spada pod próg albo zamknięcie spada o 2 ATR poniżej najwyższego zamknięcia od wejścia (stop kroczący). Po stopie nowe wejście dopiero, gdy sygnał zgaśnie i wróci. Wielkość stopu jest wybierana z siatki (brak, 2, 3, 4 ATR) po Sharpe w okresie strojenia, tak samo jak próg. Sprawdzone alternatywy, odrzucone: filtr zmienności i skalowanie pozycji do zmienności (wynik zależy od parametru, sąsiedni szkodzi), dodatkowe rynki jako cechy (srebro, VIX, S&P 500, stopy nominalne, ropa, wolumen: obniżają Sharpe w okresie strojenia z 1,07 do 0,54).
+
 ### Bramka przewagi
 
 Model „ma przewagę" tylko, gdy w **obu** okresach (strojenia i kontrolnym) strategia zarabia i ma lepszy Sharpe niż kup-i-trzymaj, a w okresie kontrolnym t-stat dziennych zwrotów > 1,65. Dobry wynik w jednym okresie to za mało. Gdy bramka nie przepuszcza, `daily` zawsze daje CZEKAJ i mówi dlaczego.
 
 ### Wynik walidacji z 2026-11-04 (prawdziwe dane, 2011-2026)
 
-| tryb w złocie albo w gotówce | okres strojenia 2016-2020 | okres kontrolny 2021-2026 |
+| w złocie albo w gotówce, stop kroczący 2 ATR | okres strojenia 2016-2020 | okres kontrolny 2021-2026 |
 |---|---|---|
-| Sharpe strategii | 1,07 | 0,95 |
+| Sharpe strategii | 1,15 | 1,33 |
 | Sharpe kup-i-trzymaj | 0,71 | 0,65 |
-| t-stat | 2,17 | 2,29 |
-| zwrot strategii | +37% | +93% |
+| t-stat | 2,34 | 3,20 |
+| zwrot strategii | +39% | +113% |
 | zwrot kup-i-trzymaj | +53% | +102% |
-| maks. obsunięcie | -8,6% | -23,9% |
-| czas w rynku | 25% dni | 36% dni |
+| maks. obsunięcie | -6,6% | -13,9% |
+| czas w rynku | 22% dni | 28% dni |
 
-Co to znaczy: model nie wygrywa z trzymaniem złota w hossie na samym zwrocie, ale daje zbliżony wynik przy 1/3 czasu w rynku i lepszym stosunku zysku do ryzyka. Słabe lata: 2021 (-4%) i 2026 (-5%, obsunięcie -24%). Najważniejsze cechy: odległość od dołka 20 sesji, odległość od szczytu 55 sesji, wzrost od dołka roku, czyli model lubi złoto po wybiciu w górę i unika go po załamaniu. Kierunku pojedynczego dnia model nie przewiduje (AUC ok. 0,5); przewaga bierze się z unikania złych okresów.
+Bez stopu kroczącego (sam sygnał): Sharpe 1,07 / 0,95, obsunięcie -8,6% / -23,9%, zwrot +37% / +93%. Co to znaczy: w okresie kontrolnym model z stopem daje nieco więcej niż trzymanie złota, przy mniej niż 1/3 czasu w rynku i obsunięciu o połowę mniejszym. Słaby rok: 2021 (-7%). Zastrzeżenie: wyniki kontrolne nakładek ryzyka były widoczne, zanim ustalono kryterium wyboru (poprawa w strojeniu dla wszystkich sąsiednich parametrów), więc ten jeden wybór nie jest tak czysty jak wybór modelu. Najważniejsze cechy: odległość od dołka 20 sesji, odległość od szczytu 55 sesji, wzrost od dołka roku, czyli model lubi złoto po wybiciu w górę i unika go po załamaniu. Kierunku pojedynczego dnia model nie przewiduje (AUC ok. 0,5); przewaga bierze się z unikania złych okresów.
 
 Historia: pierwsza wersja (gradient boosting, bez cech kształtu wykresu, tryb długa/krótka) nie miała przewagi i program mówił tylko CZEKAJ. Obecny wariant został wybrany eksperymentem z 18 kombinacji (horyzont, cechy, model), gdzie kryterium wyboru był wyłącznie okres strojenia.
 
@@ -77,7 +81,7 @@ python -m pytest tests -q
 
 Flagi `--source auto|free|oanda`, `--years 15`, `--offline` (tylko pamięć podręczna). Najpierw `train`, potem `daily`.
 
-Werdykty: KUP (wejdź w złoto, stop 2 ATR), TRZYMAJ (prognoza nadal nad progiem), ZAMKNIJ (prognoza spadła pod próg, wyjdź do gotówki), CZEKAJ (w gotówce). Rady lądują w `goldbot/goldbot.db` i są rozliczane po fakcie, z czego dashboard liczy skuteczność.
+Werdykty: KUP (wejdź w złoto, podany poziom stopu kroczącego), TRZYMAJ (prognoza nadal nad progiem, stop kroczący podniesiony), ZAMKNIJ (prognoza spadła pod próg albo stop kroczący, wyjdź do gotówki), CZEKAJ (w gotówce). Rady lądują w `goldbot/goldbot.db` i są rozliczane po fakcie, z czego dashboard liczy skuteczność.
 
 Stara warstwa M15: `python main.py cycle`, `python main.py validate`, oba z `--demo` na danych syntetycznych.
 
@@ -103,7 +107,7 @@ goldbot/
   sources.py         dane dzienne: Yahoo+FRED albo OANDA, cache, świeżość, kontrola krzyżowa
   features.py        cechy bazowe i cel prognozy
   patterns.py        cechy kształtu wykresu
-  model.py           walk-forward, metryki, tryby, bramka przewagi, zapis modelu
+  model.py           walk-forward, metryki, tryby, stop kroczący, bramka przewagi, zapis modelu
   daily_advisor.py   werdykt dzienny i rozliczanie rad
   daily_cycle.py     jeden cykl dzienny
   install_daily_task.ps1

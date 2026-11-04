@@ -1,6 +1,6 @@
 import pandas as pd
 
-from daily_advisor import close_at_market, make_daily_verdict, resolve_daily
+from daily_advisor import close_at_market, make_daily_verdict, peak_since, resolve_daily
 from store import Store
 
 T = pd.Timestamp("2026-11-03", tz="UTC")
@@ -19,9 +19,9 @@ DRIVERS = [("ret_20", 0.05), ("rsi14", 61.0), ("reg_trend", 1.0), ("brk_lo20", 0
 STATS = {"trades": 4, "win_rate_%": 50.0, "avg_R": 0.3}
 
 
-def verdict(p_up, regime="NEUTRALNY", open_v=None, edge=EDGE, stats=STATS, warnings=(), mode="ls"):
+def verdict(p_up, regime="NEUTRALNY", open_v=None, edge=EDGE, stats=STATS, warnings=(), mode="ls", **kw):
     return make_daily_verdict(row(regime), p_up, 0.6, edge["has_edge"], edge["edge_text"], open_v, DRIVERS,
-                              stats, list(warnings), mode=mode)
+                              stats, list(warnings), mode=mode, **kw)
 
 
 def test_no_edge_blocks_trading_but_shows_forecast():
@@ -75,6 +75,34 @@ def test_long_mode_never_shorts_and_exits_below_threshold():
     c = verdict(0.55, open_v=OPEN_BUY, mode="long")       # pod progiem 0.6, choć > 0.5
     assert c["verdict"] == "ZAMKNIJ" and c["close_open"]
     assert verdict(0.55, open_v=OPEN_BUY, mode="ls")["verdict"] == "TRZYMAJ"
+
+
+def test_long_mode_trailing_stop():
+    # close 4000, atr 60 -> atr_pct 1.5%; stop 2 ATR = 3% od szczytu
+    v = verdict(0.65, mode="long", trail_atr=2.0)
+    assert v["verdict"] == "KUP" and abs(v["sl"] - 4000 * 0.97) < 1e-6 and v["armed"]
+    assert "stop kroczący" in v["reasoning"]
+    # otwarta pozycja, szczyt 4100: poziom 3977 < 4000 -> TRZYMAJ, stop podniesiony
+    h = verdict(0.65, open_v=OPEN_BUY, mode="long", trail_atr=2.0, peak=4100.0)
+    assert h["verdict"] == "TRZYMAJ" and abs(h["sl"] - 4100 * 0.97) < 1e-6
+    # szczyt 4200: poziom 4074 > 4000 -> ZAMKNIJ przez stop, rozbrojenie
+    s = verdict(0.65, open_v=OPEN_BUY, mode="long", trail_atr=2.0, peak=4200.0)
+    assert s["verdict"] == "ZAMKNIJ" and s["close_open"] and not s["armed"] and "Stop kroczący" in s["reasoning"]
+    # stop nigdy nie spada: sl z bazy wyższy niż policzony poziom
+    hi = {**OPEN_BUY, "sl": 3990.0}
+    assert verdict(0.65, open_v=hi, mode="long", trail_atr=2.0, peak=4100.0)["sl"] == 3990.0
+    # po stopie: sygnał nad progiem, ale nieuzbrojony -> CZEKAJ; sygnał pod progiem uzbraja
+    w = verdict(0.65, mode="long", trail_atr=2.0, armed=False)
+    assert w["verdict"] == "CZEKAJ" and not w["armed"] and "zgaśnie i wróci" in w["reasoning"]
+    assert verdict(0.3, mode="long", trail_atr=2.0, armed=False)["armed"]
+    # bez stopu kroczącego zachowanie jak dotąd (stały stop 2 ATR)
+    assert verdict(0.65, mode="long")["sl"] == 4000.25 - 120.0
+
+
+def test_peak_since():
+    g = gold([(103, 99, 102), (105, 100, 104), (104, 98, 100)])
+    assert peak_since(g, (T + pd.Timedelta(days=2)).isoformat()) == 104.0
+    assert peak_since(g, (T + pd.Timedelta(days=3)).isoformat()) == 100.0
 
 
 def gold(rows):

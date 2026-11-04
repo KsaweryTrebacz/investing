@@ -1,5 +1,5 @@
 {
- "trained_at": "2026-11-04T11:14:05+00:00",
+ "trained_at": "2026-11-04T11:22:46+00:00",
  "rows": 3770,
  "data_from": "2011-11-04",
  "data_to": "2026-11-03",
@@ -54,18 +54,19 @@
  ],
  "mode": "long",
  "threshold": 0.58,
+ "trail_atr": 2.0,
  "has_edge": true,
- "edge_text": "Model ma przewagę poza próbą; tryb w złocie albo w gotówce; okres strojenia 2016-11-09..2020-12-31: Sharpe 1.07 (kup i trzymaj 0.71), t 2.17, zwrot +37.2% (kup i trzymaj +53.0%), obsunięcie -8.6%, w rynku 25% dni; okres kontrolny 2021-01-04..2026-11-02: Sharpe 0.95 (kup i trzymaj 0.65), t 2.29, zwrot +93.2% (kup i trzymaj +102.4%), obsunięcie -23.9%, w rynku 36% dni",
+ "edge_text": "Model ma przewagę poza próbą; tryb w złocie albo w gotówce, stop kroczący 2 ATR; okres strojenia 2016-11-09..2020-12-31: Sharpe 1.15 (kup i trzymaj 0.71), t 2.34, zwrot +39.1% (kup i trzymaj +53.0%), obsunięcie -6.6%, w rynku 22% dni; okres kontrolny 2021-01-04..2026-11-02: Sharpe 1.33 (kup i trzymaj 0.65), t 3.20, zwrot +112.6% (kup i trzymaj +102.4%), obsunięcie -13.9%, w rynku 28% dni",
  "in_sample": {
   "n": 1041,
   "accuracy": 0.4832,
   "auc": 0.4981,
-  "return_%": 37.25,
-  "sharpe": 1.067,
-  "tstat": 2.17,
-  "max_dd_%": -8.63,
+  "return_%": 39.14,
+  "sharpe": 1.149,
+  "tstat": 2.34,
+  "max_dd_%": -6.63,
   "flips": 141,
-  "days_long_%": 24.6,
+  "days_long_%": 21.9,
   "days_short_%": 0.0,
   "bh_return_%": 52.96,
   "bh_sharpe": 0.711,
@@ -76,12 +77,12 @@
   "n": 1468,
   "accuracy": 0.5422,
   "auc": 0.528,
-  "return_%": 93.21,
-  "sharpe": 0.949,
-  "tstat": 2.29,
-  "max_dd_%": -23.89,
+  "return_%": 112.59,
+  "sharpe": 1.326,
+  "tstat": 3.2,
+  "max_dd_%": -13.88,
   "flips": 198,
-  "days_long_%": 36.3,
+  "days_long_%": 28.1,
   "days_short_%": 0.0,
   "bh_return_%": 102.42,
   "bh_sharpe": 0.646,
@@ -101,20 +102,20 @@
   "2018": {
    "n": 250,
    "auc": 0.5164,
-   "return_%": 0.33,
-   "sharpe": 0.069,
-   "max_dd_%": -5.27,
+   "return_%": -0.07,
+   "sharpe": -0.015,
+   "max_dd_%": -5.01,
    "bh_return_%": -2.49,
-   "days_long_%": 21.2
+   "days_long_%": 19.6
   },
   "2019": {
    "n": 252,
    "auc": 0.3817,
-   "return_%": 6.23,
-   "sharpe": 0.966,
-   "max_dd_%": -4.81,
+   "return_%": 8.26,
+   "sharpe": 1.497,
+   "max_dd_%": -2.99,
    "bh_return_%": 19.01,
-   "days_long_%": 23.8
+   "days_long_%": 15.1
   },
   "2020": {
    "n": 253,
@@ -128,11 +129,11 @@
   "2021": {
    "n": 252,
    "auc": 0.4701,
-   "return_%": -4.47,
-   "sharpe": -0.386,
-   "max_dd_%": -9.89,
+   "return_%": -7.01,
+   "sharpe": -0.679,
+   "max_dd_%": -12.36,
    "bh_return_%": -7.53,
-   "days_long_%": 52.4
+   "days_long_%": 31.7
   },
   "2022": {
    "n": 251,
@@ -173,11 +174,11 @@
   "2026": {
    "n": 210,
    "auc": 0.5406,
-   "return_%": -5.22,
-   "sharpe": -0.303,
-   "max_dd_%": -23.89,
+   "return_%": 6.96,
+   "sharpe": 0.635,
+   "max_dd_%": -13.88,
    "bh_return_%": -8.99,
-   "days_long_%": 61.0
+   "days_long_%": 31.0
   }
  },
  "regime_baseline": {
@@ -217,16 +218,17 @@
  "modes": {
   "long": {
    "threshold": 0.58,
+   "trail_atr": 2.0,
    "in_sample": {
     "n": 1041,
     "accuracy": 0.4832,
     "auc": 0.4981,
-    "return_%": 37.25,
-    "sharpe": 1.067,
-    "tstat": 2.17,
-    "max_dd_%": -8.63,
+    "return_%": 39.14,
+    "sharpe": 1.149,
+    "tstat": 2.34,
+    "max_dd_%": -6.63,
     "flips": 141,
-    "days_long_%": 24.6,
+    "days_long_%": 21.9,
     "days_short_%": 0.0,
     "bh_return_%": 52.96,
     "bh_sharpe": 0.711,
@@ -237,12 +239,12 @@
     "n": 1468,
     "accuracy": 0.5422,
     "auc": 0.528,
-    "return_%": 93.21,
-    "sharpe": 0.949,
-    "tstat": 2.29,
-    "max_dd_%": -23.89,
+    "return_%": 112.59,
+    "sharpe": 1.326,
+    "tstat": 3.2,
+    "max_dd_%": -13.88,
     "flips": 198,
-    "days_long_%": 36.3,
+    "days_long_%": 28.1,
     "days_short_%": 0.0,
     "bh_return_%": 102.42,
     "bh_sharpe": 0.646,
@@ -250,7 +252,7 @@
     "to": "2026-11-02"
    },
    "has_edge": true,
-   "edge_text": "Model ma przewagę poza próbą; tryb w złocie albo w gotówce; okres strojenia 2016-11-09..2020-12-31: Sharpe 1.07 (kup i trzymaj 0.71), t 2.17, zwrot +37.2% (kup i trzymaj +53.0%), obsunięcie -8.6%, w rynku 25% dni; okres kontrolny 2021-01-04..2026-11-02: Sharpe 0.95 (kup i trzymaj 0.65), t 2.29, zwrot +93.2% (kup i trzymaj +102.4%), obsunięcie -23.9%, w rynku 36% dni",
+   "edge_text": "Model ma przewagę poza próbą; tryb w złocie albo w gotówce, stop kroczący 2 ATR; okres strojenia 2016-11-09..2020-12-31: Sharpe 1.15 (kup i trzymaj 0.71), t 2.34, zwrot +39.1% (kup i trzymaj +53.0%), obsunięcie -6.6%, w rynku 22% dni; okres kontrolny 2021-01-04..2026-11-02: Sharpe 1.33 (kup i trzymaj 0.65), t 3.20, zwrot +112.6% (kup i trzymaj +102.4%), obsunięcie -13.9%, w rynku 28% dni",
    "by_year": {
     "2017": {
      "n": 251,
@@ -264,20 +266,20 @@
     "2018": {
      "n": 250,
      "auc": 0.5164,
-     "return_%": 0.33,
-     "sharpe": 0.069,
-     "max_dd_%": -5.27,
+     "return_%": -0.07,
+     "sharpe": -0.015,
+     "max_dd_%": -5.01,
      "bh_return_%": -2.49,
-     "days_long_%": 21.2
+     "days_long_%": 19.6
     },
     "2019": {
      "n": 252,
      "auc": 0.3817,
-     "return_%": 6.23,
-     "sharpe": 0.966,
-     "max_dd_%": -4.81,
+     "return_%": 8.26,
+     "sharpe": 1.497,
+     "max_dd_%": -2.99,
      "bh_return_%": 19.01,
-     "days_long_%": 23.8
+     "days_long_%": 15.1
     },
     "2020": {
      "n": 253,
@@ -291,11 +293,11 @@
     "2021": {
      "n": 252,
      "auc": 0.4701,
-     "return_%": -4.47,
-     "sharpe": -0.386,
-     "max_dd_%": -9.89,
+     "return_%": -7.01,
+     "sharpe": -0.679,
+     "max_dd_%": -12.36,
      "bh_return_%": -7.53,
-     "days_long_%": 52.4
+     "days_long_%": 31.7
     },
     "2022": {
      "n": 251,
@@ -336,11 +338,11 @@
     "2026": {
      "n": 210,
      "auc": 0.5406,
-     "return_%": -5.22,
-     "sharpe": -0.303,
-     "max_dd_%": -23.89,
+     "return_%": 6.96,
+     "sharpe": 0.635,
+     "max_dd_%": -13.88,
      "bh_return_%": -8.99,
-     "days_long_%": 61.0
+     "days_long_%": 31.0
     }
    },
    "regime_baseline": {
@@ -380,6 +382,7 @@
   },
   "ls": {
    "threshold": 0.6,
+   "trail_atr": null,
    "in_sample": {
     "n": 1041,
     "accuracy": 0.4832,

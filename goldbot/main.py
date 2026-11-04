@@ -115,7 +115,9 @@ def cmd_train(args):
     report["source"] = data.source
     pd.set_option("display.width", 200)
     mode_pl = {"long": "w złocie albo w gotówce", "ls": "długa/krótka"}[report["mode"]]
-    print("\nModel {} (tryb: {}, próg {:.2f}):".format(report["model_kind"], mode_pl, report["threshold"]))
+    trail = report.get("trail_atr")
+    print("\nModel {} (tryb: {}, próg {:.2f}, stop kroczący: {}):".format(
+        report["model_kind"], mode_pl, report["threshold"], f"{trail:g} ATR" if trail else "brak"))
     print(pd.DataFrame({"okres strojenia": report["in_sample"], "okres kontrolny": report["out_of_sample"]}).to_string())
     print("\nSame reguły reżimu (bez ML), do porównania:")
     print(pd.DataFrame({"okres strojenia": report["regime_baseline"]["in_sample"],

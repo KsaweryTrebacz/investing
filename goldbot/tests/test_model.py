@@ -79,6 +79,25 @@ def test_edge_verdict_requires_both_periods_beating_hold_and_significance():
     assert "długa/krótka" in M.edge_verdict(good, good, "ls")[1]
 
 
+def test_apply_trailing_exits_and_rearms():
+    idx = pd.bdate_range("2024-01-01", periods=8, tz="UTC")
+    pos = pd.Series([1, 1, 1, 1, 1, 0, 1, 1], index=idx, dtype=float)
+    close = pd.Series([100, 104, 103, 100.0, 101, 101, 101, 102], index=idx)   # 100 < 104*(1-0.03)=100.88 -> stop
+    atr_pct = pd.Series(0.015, index=idx)
+    out = M.apply_trailing(pos, close, atr_pct, 2.0)
+    assert out.tolist() == [1, 1, 1, 0, 0, 0, 1, 1]   # stop w dniu 4, dzień 5 nieuzbrojony, dzień 6 sygnał gaśnie, 7 wejście
+    assert M.apply_trailing(pos, close, atr_pct, None).equals(pos)
+    assert M.trailing_level(104.0, 0.015, 2.0) == 104.0 * 0.97 and M.trailing_level(104.0, 0.015, None) is None
+
+
+def test_choose_params_returns_threshold_and_trail():
+    feat = build_features(predictable_gold(1600), None, None)
+    p = M.walk_forward(feat)
+    thr, trail = M.choose_params(p, feat, "long", split="2017-06-30")
+    assert thr in M.GRID and trail in M.TRAIL_GRID
+    assert M.choose_params(p, feat, "ls", split="2017-06-30")[1] is None
+
+
 def test_fit_final_save_load_predict(tmp_path):
     feat = build_features(predictable_gold(1500), None, None)
     m, imp = M.fit_final(feat)
@@ -88,5 +107,5 @@ def test_fit_final_save_load_predict(tmp_path):
     b = M.load_model(path)
     p = M.predict_last(b, feat)
     assert 0.0 <= p <= 1.0
-    assert len(M.top_drivers(b, feat)) == 3 and b["mode"] == "long"
+    assert len(M.top_drivers(b, feat)) == 3 and b["mode"] == "long" and "trail_atr" in b
     assert M.load_model(str(tmp_path / "none.joblib")) is None

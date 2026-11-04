@@ -34,6 +34,7 @@ SPLIT_DATE = "2020-12-31"  # próg wybierany tylko na prognozach do tej daty
 GRID = (0.55, 0.58, 0.60, 0.65)
 MIN_TSTAT = 1.65           # jednostronny test 5%: średni dzienny zwrot strategii > 0
 MODES = ("long", "ls")
+TRAIL_GRID = (None, 2.0, 3.0, 4.0)   # stop kroczący w ATR od szczytu zamknięć (tylko tryb long)
 
 
 def make_model(kind: str = MODEL_KIND, seed: int = 0):
@@ -75,9 +76,39 @@ def positions(p_up: pd.Series, thr: float, mode: str = "long") -> pd.Series:
     return pos
 
 
-def strategy_returns(p_up: pd.Series, ret_1_fwd: pd.Series, cost: pd.Series, thr: float, mode: str = "long") -> pd.Series:
+def apply_trailing(pos: pd.Series, close: pd.Series, atr_pct: pd.Series, k) -> pd.Series:
+    """Stop kroczący: wyjście, gdy zamknięcie spada o k ATR poniżej najwyższego zamknięcia od wejścia.
+    Po stopie ponowne wejście dopiero, gdy sygnał zgaśnie i wróci (uzbrojenie), żeby nie wchodzić
+    od razu w ten sam spadek."""
+    if k is None:
+        return pos
+    p, c, ap = pos.to_numpy(), close.to_numpy(dtype=float), atr_pct.to_numpy(dtype=float)
+    out = np.zeros(len(p))
+    in_pos, peak, armed = False, 0.0, True
+    for i in range(len(p)):
+        want = p[i] > 0
+        if not want:
+            armed, in_pos = True, False
+        if in_pos:
+            peak = max(peak, c[i])
+            if c[i] < peak * (1 - k * ap[i]):
+                in_pos, armed = False, False
+        if want and not in_pos and armed:
+            in_pos, peak = True, c[i]
+        out[i] = 1.0 if in_pos else 0.0
+    return pd.Series(out, index=pos.index)
+
+
+def trailing_level(peak: float, atr_pct: float, k) -> float | None:
+    return None if k is None else peak * (1 - k * atr_pct)
+
+
+def strategy_returns(p_up: pd.Series, ret_1_fwd: pd.Series, cost: pd.Series, thr: float, mode: str = "long",
+                     trail=None, close=None, atr_pct=None) -> pd.Series:
     """Zwrot dzienny: pozycja ustalona na zamknięciu t razy zwrot t->t+1, minus spread/2 przy zmianie pozycji."""
     pos = positions(p_up, thr, mode)
+    if trail is not None and mode == "long":
+        pos = apply_trailing(pos, close[pos.index], atr_pct[pos.index], trail)
     flips = pos.diff().abs().fillna(pos.abs())
     return pos * ret_1_fwd - flips * cost / 2
 
@@ -89,7 +120,8 @@ def _sharpe(sr: pd.Series) -> tuple[float, float]:
     return float(sr.mean() / std * np.sqrt(252)), float(sr.mean() / std * np.sqrt(len(sr)))
 
 
-def metrics(p_up: pd.Series, y: pd.Series, ret_1_fwd: pd.Series, cost: pd.Series, thr: float, mode: str = "long") -> dict:
+def metrics(p_up: pd.Series, y: pd.Series, ret_1_fwd: pd.Series, cost: pd.Series, thr: float, mode: str = "long",
+            trail=None, feat: pd.DataFrame | None = None) -> dict:
     ok = p_up.notna() & ret_1_fwd.notna()
     p, r1, c = p_up[ok], ret_1_fwd[ok], cost[ok]
     if len(p) < 50:
@@ -98,12 +130,18 @@ def metrics(p_up: pd.Series, y: pd.Series, ret_1_fwd: pd.Series, cost: pd.Series
     lab = yy.notna()
     auc = float(roc_auc_score(yy[lab], p[lab])) if lab.sum() > 50 and yy[lab].nunique() == 2 else float("nan")
     acc = float(((p[lab] >= 0.5) == (yy[lab] == 1)).mean()) if lab.sum() else float("nan")
-    sr = strategy_returns(p, r1, c, thr, mode)
+    close = feat["close"] if feat is not None else None
+    atr_pct = feat["atr_pct"] if feat is not None else None
+    if trail is not None and feat is None:
+        raise ValueError("stop kroczący wymaga ramki cech (close, atr_pct)")
+    sr = strategy_returns(p, r1, c, thr, mode, trail, close, atr_pct)
     eq = np.exp(sr.cumsum())
     dd = float((eq / eq.cummax() - 1).min())
     sharpe, tstat = _sharpe(sr)
     bh_sharpe, _ = _sharpe(r1)
     pos = positions(p, thr, mode)
+    if trail is not None and mode == "long":
+        pos = apply_trailing(pos, close[pos.index], atr_pct[pos.index], trail)
     return {
         "n": int(len(p)), "accuracy": round(acc, 4), "auc": round(auc, 4),
         "return_%": round(100 * float(np.exp(sr.sum()) - 1), 2), "sharpe": round(sharpe, 3),
@@ -121,15 +159,22 @@ def _ret_1_fwd(feat: pd.DataFrame) -> pd.Series:
 
 
 def choose_threshold(p_up: pd.Series, feat: pd.DataFrame, mode: str = "long", split: str = SPLIT_DATE, grid=GRID) -> float:
+    return choose_params(p_up, feat, mode, split, grid, (None,))[0]
+
+
+def choose_params(p_up: pd.Series, feat: pd.DataFrame, mode: str = "long", split: str = SPLIT_DATE,
+                  grid=GRID, trail_grid=TRAIL_GRID) -> tuple[float, float | None]:
+    """(próg, stop kroczący) po Sharpe w okresie strojenia; remis rozstrzyga mniejsze obsunięcie."""
     ins = p_up.index <= pd.Timestamp(split, tz="UTC")
     r1 = _ret_1_fwd(feat)
-    best, best_s = grid[0], -np.inf
+    best, best_key = (grid[0], None), (-np.inf, -np.inf)
     for thr in grid:
-        m = metrics(p_up[ins], feat["y"][ins], r1[ins], feat["cost"][ins], thr, mode)
-        s = m.get("sharpe", -np.inf)
-        if s > best_s:
-            best, best_s = thr, s
-    return float(best)
+        for trail in (trail_grid if mode == "long" else (None,)):
+            m = metrics(p_up[ins], feat["y"][ins], r1[ins], feat["cost"][ins], thr, mode, trail, feat)
+            key = (round(m.get("sharpe", -np.inf), 2), m.get("max_dd_%", -np.inf))
+            if key > best_key:
+                best, best_key = (float(thr), trail), key
+    return best
 
 
 def _period_ok(m: dict) -> bool:
@@ -145,12 +190,14 @@ def _period_txt(name: str, m: dict) -> str:
             f"obsunięcie {m['max_dd_%']:.1f}%, w rynku {m['days_long_%'] + m['days_short_%']:.0f}% dni")
 
 
-def edge_verdict(ins: dict, oos: dict, mode: str = "long") -> tuple[bool, str]:
+def edge_verdict(ins: dict, oos: dict, mode: str = "long", trail=None) -> tuple[bool, str]:
     """Przewaga tylko, gdy w OBU okresach (strojenia i kontrolnym) strategia zarabia i ma lepszy Sharpe niż
     kup-i-trzymaj, a w okresie kontrolnym wynik jest istotny statystycznie. Dobry wynik w jednym okresie
     to za mało: może być hossą, nie umiejętnością."""
     ok = _period_ok(ins) and _period_ok(oos) and oos.get("tstat", 0) > MIN_TSTAT
     mode_pl = "w złocie albo w gotówce" if mode == "long" else "długa/krótka"
+    if trail is not None:
+        mode_pl += f", stop kroczący {trail:g} ATR"
     txt = f"tryb {mode_pl}; " + _period_txt("okres strojenia", ins) + "; " + _period_txt("okres kontrolny", oos)
     if ok:
         return True, "Model ma przewagę poza próbą; " + txt
@@ -169,11 +216,11 @@ def regime_baseline(feat: pd.DataFrame, ins, mode: str = "long") -> tuple[dict, 
             metrics(pseudo[~ins], feat["y"][~ins], r1[~ins], feat["cost"][~ins], 0.75, mode))
 
 
-def by_year(p_up: pd.Series, feat: pd.DataFrame, thr: float, mode: str = "long") -> dict:
+def by_year(p_up: pd.Series, feat: pd.DataFrame, thr: float, mode: str = "long", trail=None) -> dict:
     r1 = _ret_1_fwd(feat)
     out = {}
     for yr, idx in p_up.dropna().groupby(p_up.dropna().index.year).groups.items():
-        m = metrics(p_up[idx], feat["y"][idx], r1[idx], feat["cost"][idx], thr, mode)
+        m = metrics(p_up[idx], feat["y"][idx], r1[idx], feat["cost"][idx], thr, mode, trail, feat)
         if "sharpe" in m:
             out[int(yr)] = {k: m[k] for k in ("n", "auc", "return_%", "sharpe", "max_dd_%", "bh_return_%", "days_long_%")}
     return out
@@ -187,13 +234,13 @@ def evaluate(feat: pd.DataFrame, split: str = SPLIT_DATE) -> tuple[dict, pd.Seri
     ins = p_up.index <= pd.Timestamp(split, tz="UTC")
     modes = {}
     for mode in MODES:
-        thr = choose_threshold(p_up, feat, mode, split)
-        rep_in = metrics(p_up[ins], feat["y"][ins], r1[ins], feat["cost"][ins], thr, mode)
-        rep_out = metrics(p_up[~ins], feat["y"][~ins], r1[~ins], feat["cost"][~ins], thr, mode)
-        has_edge, text = edge_verdict(rep_in, rep_out, mode)
+        thr, trail = choose_params(p_up, feat, mode, split)
+        rep_in = metrics(p_up[ins], feat["y"][ins], r1[ins], feat["cost"][ins], thr, mode, trail, feat)
+        rep_out = metrics(p_up[~ins], feat["y"][~ins], r1[~ins], feat["cost"][~ins], thr, mode, trail, feat)
+        has_edge, text = edge_verdict(rep_in, rep_out, mode, trail)
         base_in, base_out = regime_baseline(feat, ins, mode)
-        modes[mode] = {"threshold": thr, "in_sample": rep_in, "out_of_sample": rep_out, "has_edge": has_edge,
-                       "edge_text": text, "by_year": by_year(p_up, feat, thr, mode),
+        modes[mode] = {"threshold": thr, "trail_atr": trail, "in_sample": rep_in, "out_of_sample": rep_out,
+                       "has_edge": has_edge, "edge_text": text, "by_year": by_year(p_up, feat, thr, mode, trail),
                        "regime_baseline": {"in_sample": base_in, "out_of_sample": base_out}}
     # wybór trybu wyłącznie po okresie strojenia (Sharpe), nie po tym, który "wyszedł" na kontrolnym
     mode = max(MODES, key=lambda m: modes[m]["in_sample"].get("sharpe", -np.inf))
@@ -201,7 +248,8 @@ def evaluate(feat: pd.DataFrame, split: str = SPLIT_DATE) -> tuple[dict, pd.Seri
     report = {"trained_at": datetime.now(timezone.utc).isoformat(timespec="seconds"),
               "rows": int(len(feat)), "data_from": str(feat.index[0].date()), "data_to": str(feat.index[-1].date()),
               "split": split, "model_kind": MODEL_KIND, "horizon": HORIZON, "features": FEATURES,
-              "mode": mode, "threshold": chosen["threshold"], "has_edge": chosen["has_edge"],
+              "mode": mode, "threshold": chosen["threshold"], "trail_atr": chosen["trail_atr"],
+              "has_edge": chosen["has_edge"],
               "edge_text": chosen["edge_text"], "in_sample": chosen["in_sample"],
               "out_of_sample": chosen["out_of_sample"], "by_year": chosen["by_year"],
               "regime_baseline": chosen["regime_baseline"], "modes": modes}
@@ -221,6 +269,7 @@ def fit_final(feat: pd.DataFrame, horizon: int = HORIZON, seed: int = 0):
 
 def save_model(path: str, model, threshold: float, importances: dict, report: dict):
     joblib.dump({"model": model, "features": FEATURES, "threshold": threshold, "mode": report.get("mode", "long"),
+                 "trail_atr": report.get("trail_atr"),
                  "importances": importances, "trained_at": report["trained_at"]}, path)
 
 

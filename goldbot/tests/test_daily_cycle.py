@@ -86,6 +86,34 @@ def test_bad_data_raises_and_stores_nothing():
     assert store.last_verdict() is None
 
 
+def test_long_mode_trailing_stop_closes_and_rearms():
+    store = Store()
+    b = bundle(0.7) | {"mode": "long", "trail_atr": 2.0}
+    r = run_daily_cycle(data(), b, REPORT_EDGE, store, now=NOW)
+    assert r["verdict"]["verdict"] == "KUP" and store.get_current("daily_armed")["armed"]
+    # dzień 2: cena bez zmian -> TRZYMAJ, stop zaktualizowany w bazie
+    nxt = data(401, end="2026-11-04")
+    r2 = run_daily_cycle(nxt, b, REPORT_EDGE, store, now=NOW + pd.Timedelta(days=1))
+    assert r2["verdict"]["verdict"] == "TRZYMAJ"
+    assert store.open_verdicts("D1")[0]["sl"] == r2["verdict"]["sl"]
+    # dzień 3: krach 10% -> stop kroczący, ZAMKNIJ, rozbrojenie
+    crash = data(402, end="2026-11-05")
+    for c in ("bid_o", "bid_h", "bid_l", "bid_c", "ask_o", "ask_h", "ask_l", "ask_c"):
+        crash.gold.loc[crash.gold.index[-1], c] *= 0.9
+    r3 = run_daily_cycle(crash, b, REPORT_EDGE, store, now=NOW + pd.Timedelta(days=2))
+    assert r3["verdict"]["verdict"] == "ZAMKNIJ" and r3["resolved"] == 1
+    assert store.open_verdicts("D1") == [] and not store.get_current("daily_armed")["armed"]
+    # dzień 4: sygnał nadal nad progiem, ale nieuzbrojony -> CZEKAJ
+    r4 = run_daily_cycle(data(403, end="2026-11-06"), b, REPORT_EDGE, store, now=NOW + pd.Timedelta(days=3))
+    assert r4["verdict"]["verdict"] == "CZEKAJ"
+    # dzień 5: sygnał gaśnie -> uzbrojenie; dzień 6: wraca -> KUP
+    run_daily_cycle(data(404, end="2026-11-09"), bundle(0.3) | {"mode": "long", "trail_atr": 2.0}, REPORT_EDGE, store,
+                    now=NOW + pd.Timedelta(days=6))
+    assert store.get_current("daily_armed")["armed"]
+    r6 = run_daily_cycle(data(405, end="2026-11-10"), b, REPORT_EDGE, store, now=NOW + pd.Timedelta(days=7))
+    assert r6["verdict"]["verdict"] == "KUP"
+
+
 def test_should_store_daily():
     a = {"time": "t1", "verdict": "CZEKAJ"}
     assert should_store_daily(None, a)

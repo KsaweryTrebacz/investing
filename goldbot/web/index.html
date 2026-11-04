@@ -116,7 +116,7 @@ function renderDaily(d){
   const o = rep.out_of_sample || {}, b = (rep.regime_baseline||{}).out_of_sample || {};
   [["AUC",o.auc],["Sharpe",o.sharpe],["t-stat",o.tstat],["Zwrot",o["return_%"]!=null?o["return_%"]+"%":null],
    ["Obsunięcie",o["max_dd_%"]!=null?o["max_dd_%"]+"%":null],["Kup i trzymaj",o["bh_return_%"]!=null?o["bh_return_%"]+"%":null],
-   ["Kup i trzymaj: Sharpe",o.bh_sharpe],["Same reguły: Sharpe",b.sharpe],["Próg rady",rep.threshold]].forEach(([n,x])=>{
+   ["Kup i trzymaj: Sharpe",o.bh_sharpe],["Same reguły: Sharpe",b.sharpe],["Próg rady",rep.threshold],["Stop kroczący",rep.trail_atr?rep.trail_atr+" ATR":"brak"]].forEach(([n,x])=>{
     const dv=document.createElement("div");dv.textContent=n;const bb=document.createElement("b");bb.textContent=x==null?"-":x;dv.prepend(bb);km.appendChild(dv);});
   const st = document.getElementById("dstats"); st.replaceChildren();
   const S = d.stats || {};
