@@ -126,6 +126,20 @@ def pick_source(name: str, env=None) -> str:
     raise ValueError(f"Nieznane źródło: {name} (dozwolone: auto, free, oanda)")
 
 
+SESSION_CLOSE_UTC = 23  # po tej godzinie UTC świeca dzienna złota (COMEX/Yahoo) jest zamknięta
+
+
+def drop_incomplete(df: pd.DataFrame, now=None) -> pd.DataFrame:
+    """Usuwa ostatnią świecę dzienną, jeśli jej sesja jeszcze trwa (Yahoo zwraca bieżący dzień w toku)."""
+    now = pd.Timestamp.now(tz="UTC") if now is None else pd.Timestamp(now).tz_convert("UTC")
+    if df.empty:
+        return df
+    last_day = df["time"].iloc[-1].tz_convert("UTC").normalize()
+    if now < last_day + pd.Timedelta(hours=SESSION_CLOSE_UTC):
+        return df.iloc[:-1].reset_index(drop=True)
+    return df
+
+
 def is_daily_stale(last_time, now) -> bool:
     """Ostatnia świeca dzienna jest nieaktualna, gdy między nią a `now` minął więcej niż jeden
     dzień sesyjny bez świecy (np. piątkowa świeca w środę). Weekend się nie liczy."""
@@ -156,13 +170,14 @@ class FreeSource:
     """Yahoo Finance (GC=F, DX-Y.NYB) + FRED CSV bez klucza. Prawdziwe dane, zero kont."""
     name = "free"
 
-    def __init__(self, offline: bool = False):
+    def __init__(self, offline: bool = False, now=None):
         self.offline = offline
+        self.now = now
 
     def fetch_daily(self, years: int = 15) -> DailyData:
         w = []
-        gold = parse_yahoo_chart(json.loads(fetch_text(YAHOO.format(symbol=GOLD_SYMBOL, years=years),
-                                                       "gold.json", self.offline, w)))
+        gold = drop_incomplete(parse_yahoo_chart(json.loads(fetch_text(
+            YAHOO.format(symbol=GOLD_SYMBOL, years=years), "gold.json", self.offline, w))), self.now)
         usd = yld = None
         try:
             usd = to_naive_series(parse_yahoo_chart(json.loads(

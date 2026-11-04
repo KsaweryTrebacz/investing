@@ -2,9 +2,9 @@
   "version": "0.0.1",
   "configurations": [
     {
-      "name": "goldbot-dashboard-demo",
-      "runtimeExecutable": "C:\\Users\\skywa\\AppData\\Local\\Programs\\Python\\Python312\\python.exe",
-      "runtimeArgs": ["goldbot/main.py", "dashboard", "--demo", "--port", "8787"],
+      "name": "dashboard",
+      "runtimeExecutable": "python",
+      "runtimeArgs": ["goldbot/main.py", "dashboard", "--port", "8787"],
       "port": 8787
     }
   ]

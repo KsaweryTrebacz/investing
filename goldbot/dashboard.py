@@ -4,6 +4,7 @@ import os
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 
 from advisor import TRADE
+from model import load_report
 from store import Store
 
 WEB = os.path.join(os.path.dirname(os.path.abspath(__file__)), "web")
@@ -12,12 +13,22 @@ WEB = os.path.join(os.path.dirname(os.path.abspath(__file__)), "web")
 def build_state(store: Store, n_candles: int = 200) -> dict:
     c = store.load_candles("M15", n_candles)
     mid = ((c["bid_c"] + c["ask_c"]) / 2).round(2)
-    recent = store.recent_verdicts(20)
+    recent = store.recent_verdicts(20, "M15")
+    d = store.load_candles("D", 260)
+    rep = load_report() or {}
     return {
         "last_update": c["time"].iloc[-1].isoformat() if len(c) else None,
         "latest": store.get_current(),
         "recent": recent,
-        "stats": store.stats(),
+        "stats": store.stats("M15"),
+        "daily": {
+            "latest": store.get_current("daily"),
+            "recent": store.recent_verdicts(15, "D1"),
+            "stats": store.stats("D1"),
+            "last_update": d["time"].iloc[-1].isoformat() if len(d) else None,
+            "candles": [{"t": t.isoformat(), "c": float(v)} for t, v in zip(d["time"], ((d["bid_c"] + d["ask_c"]) / 2).round(2))],
+            "report": {k: rep.get(k) for k in ("has_edge", "edge_text", "threshold", "trained_at", "out_of_sample", "in_sample", "regime_baseline")},
+        },
         "candles": [{"t": t.isoformat(), "c": float(v)} for t, v in zip(c["time"], mid)],
         "marks": [{"t": r["time"], "verdict": r["verdict"], "entry": r["entry"]}
                   for r in recent if r["verdict"] in TRADE],

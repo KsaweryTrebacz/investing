@@ -3,6 +3,8 @@
   python main.py cycle     [--demo]                 # jeden cykl: werdykt, zapis, powiadomienie
   python main.py dashboard [--demo] [--port 8787]   # lokalna strona z werdyktem
   python main.py validate  [--demo] [--years 3]     # walk-forward: czy reguły mają przewagę poza próbą
+  python main.py train     [--source auto|free|oanda] [--years 15] [--offline]  # model dzienny: walidacja + uczenie
+  python main.py daily     [--source auto|free|oanda] [--offline]               # werdykt dzienny
 """
 import argparse
 import os
@@ -87,6 +89,83 @@ def cmd_cycle(args):
     return 0
 
 
+def _daily_data(args):
+    from sources import make_source, pick_source
+
+    name = pick_source(args.source)
+    print(f"Źródło danych: {name}" + (" (offline, z pamięci podręcznej)" if args.offline else ""))
+    return make_source(args.source, args.offline).fetch_daily(args.years)
+
+
+def cmd_train(args):
+    import model as M
+    from features import build_features
+
+    try:
+        data = _daily_data(args)
+        validate_candles(data.gold, "D1", 1500)
+    except (DataError, Exception) as e:
+        print(f"Dane odrzucone, model nie został nauczony: {e}")
+        return 1
+    for w in data.warnings:
+        print(f"Uwaga: {w}")
+    feat = build_features(data.gold, data.usd, data.yld)
+    print(f"Sesje: {len(feat)} ({feat.index[0].date()} -> {feat.index[-1].date()}). Liczę walk-forward...")
+    report, _ = M.evaluate(feat)
+    report["source"] = data.source
+    pd.set_option("display.width", 200)
+    print("\nModel (próg {:.2f}):".format(report["threshold"]))
+    print(pd.DataFrame({"okres strojenia": report["in_sample"], "okres kontrolny": report["out_of_sample"]}).to_string())
+    print("\nSame reguły reżimu (bez ML), do porównania:")
+    print(pd.DataFrame({"okres strojenia": report["regime_baseline"]["in_sample"],
+                        "okres kontrolny": report["regime_baseline"]["out_of_sample"]}).to_string())
+    print("\nRok po roku:")
+    print(pd.DataFrame(report["by_year"]).T.to_string())
+    print("\n" + report["edge_text"])
+    m, imp = M.fit_final(feat)
+    M.save_model(M.MODEL_PATH, m, report["threshold"], imp, report)
+    M.save_report(report)
+    top = sorted(imp.items(), key=lambda kv: -kv[1])[:5]
+    print("Najważniejsze cechy: " + ", ".join(f"{k} ({v:.3f})" for k, v in top))
+    print(f"Zapisano {M.MODEL_PATH} i {M.REPORT_PATH}.")
+    return 0
+
+
+def cmd_daily(args):
+    import model as M
+    from daily_cycle import run_daily_cycle
+    from notify import telegram_sender
+    from store import Store
+
+    bundle, report = M.load_model(), M.load_report()
+    if bundle is None or report is None:
+        print("Brak modelu. Najpierw: python main.py train")
+        return 1
+    age = (pd.Timestamp.now(tz="UTC") - pd.Timestamp(report["trained_at"])).days
+    if age > 100:
+        print(f"Model ma {age} dni. Uruchom ponownie: python main.py train")
+    try:
+        data = _daily_data(args)
+    except Exception as e:
+        print(f"Błąd pobierania danych, werdykt nie został wydany: {e}")
+        return 1
+    send = telegram_sender()
+    if send is None:
+        print("Telegram nieskonfigurowany (TELEGRAM_BOT_TOKEN, TELEGRAM_CHAT_ID), bez powiadomień.")
+    try:
+        res = run_daily_cycle(data, bundle, report, Store(db_path(False)), send)
+    except DataError as e:
+        print(f"Dane odrzucone, werdykt nie został wydany: {e}")
+        return 1
+    v = res["verdict"]
+    print(f"{v['time'][:10]}  {v['verdict']}  p(wzrost)={100 * v['p_up']:.0f}%  reżim={v['regime']}  "
+          f"zapisano={res['stored']}  rozstrzygnięto={res['resolved']}")
+    print(v["reasoning"])
+    if v["entry"]:
+        print(f"Wejście ok. {v['entry']:.2f}  stop {v['sl']:.2f}  horyzont {v['horizon']} sesji")
+    return 0
+
+
 def cmd_dashboard(args):
     from dashboard import serve
     serve(db_path(args.demo), args.port)
@@ -131,8 +210,14 @@ def main():
     v.add_argument("--demo", action="store_true")
     v.add_argument("--years", type=float, default=3.0)
     v.add_argument("--split", type=float, default=0.7)
+    for name in ("train", "daily"):
+        sp = sub.add_parser(name)
+        sp.add_argument("--source", default="auto", choices=["auto", "free", "oanda"])
+        sp.add_argument("--years", type=int, default=15)
+        sp.add_argument("--offline", action="store_true", help="użyj pamięci podręcznej, bez sieci")
     args = ap.parse_args()
-    return {"cycle": cmd_cycle, "dashboard": cmd_dashboard, "validate": cmd_validate}[args.cmd](args)
+    return {"cycle": cmd_cycle, "dashboard": cmd_dashboard, "validate": cmd_validate,
+            "train": cmd_train, "daily": cmd_daily}[args.cmd](args)
 
 
 if __name__ == "__main__":

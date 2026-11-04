@@ -6,8 +6,8 @@ import pandas as pd
 import pytest
 
 import sources
-from sources import (DailyData, cross_check, is_daily_stale, parse_fred_csv, parse_yahoo_chart,
-                     pick_source, with_spread)
+from sources import (DailyData, cross_check, drop_incomplete, is_daily_stale, parse_fred_csv,
+                     parse_yahoo_chart, pick_source, with_spread)
 
 FIX = pathlib.Path(__file__).parent / "fixtures"
 
@@ -85,3 +85,11 @@ def test_free_source_uses_cache_offline(tmp_path, monkeypatch):
     assert len(d.gold) == 39 and "bid_c" in d.gold
     assert d.usd is not None and d.yld is not None
     assert any("pamięci podręcznej" in w for w in d.warnings)
+
+
+def test_drop_incomplete_removes_todays_running_session_only():
+    df = pd.DataFrame({"time": pd.to_datetime(["2026-11-03", "2026-11-04"], utc=True), "close": [1.0, 2.0]})
+    assert len(drop_incomplete(df, pd.Timestamp("2026-11-04 10:00", tz="UTC"))) == 1
+    assert len(drop_incomplete(df, pd.Timestamp("2026-11-04 23:30", tz="UTC"))) == 2
+    assert len(drop_incomplete(df, pd.Timestamp("2026-11-05 01:00", tz="UTC"))) == 2
+    assert drop_incomplete(df.iloc[:0], pd.Timestamp("2026-11-05", tz="UTC")).empty

@@ -17,7 +17,12 @@ h1{font-size:18px;margin:0 0 16px;color:var(--gold);letter-spacing:.04em}
 .card{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:16px}
 .label{color:var(--muted);font-size:12px;text-transform:uppercase;letter-spacing:.08em}
 #verdict{font-size:40px;font-weight:700;margin:2px 0}
-.KUP{color:var(--buy)}.SPRZEDAJ{color:var(--sell)}.CZEKAJ{color:var(--wait)}
+.KUP{color:var(--buy)}.SPRZEDAJ{color:var(--sell)}.CZEKAJ{color:var(--wait)}.TRZYMAJ{color:var(--gold)}.ZAMKNIJ{color:#e0a030}
+.edge{display:inline-block;padding:2px 8px;border-radius:999px;font-size:12px;margin:4px 0 8px}
+.edge.ok{background:#173d2f;color:var(--buy)}.edge.no{background:#3d1d1b;color:var(--sell)}
+#dverdict{font-size:40px;font-weight:700;margin:2px 0}
+.kv{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:8px;font-size:13px}
+.kv b{display:block;font-size:16px}
 .levels{display:flex;gap:18px;flex-wrap:wrap;margin:6px 0 10px}
 .levels b{display:block;font-size:18px}
 #reasoning{color:var(--text)}
@@ -34,6 +39,32 @@ th{color:var(--muted);font-weight:500}
 <body>
 <main>
 <h1>DORADCA XAU/USD</h1>
+<div class="grid">
+  <section class="card">
+    <div class="label">Werdykt dzienny (model predykcyjny, horyzont 10 sesji)</div>
+    <div id="dverdict" class="CZEKAJ">...</div>
+    <div id="edge" class="edge no">brak raportu modelu</div>
+    <div class="levels" id="dlevels"></div>
+    <div id="dreasoning"></div>
+    <div class="note" id="dupdated"></div>
+  </section>
+  <section class="card">
+    <div class="label">Model poza próbą (okres kontrolny od 2021)</div>
+    <div class="kv" id="dmodel"></div>
+    <div class="label" style="margin-top:12px">Skuteczność rad dziennych (rozstrzygnięte)</div>
+    <div class="stats" id="dstats"></div>
+  </section>
+</div>
+<section class="card" style="margin-top:14px">
+  <div class="label">Cena dzienna (ostatni rok) i rady dzienne</div>
+  <div class="chart"><canvas id="dchart"></canvas></div>
+</section>
+<section class="card" style="margin-top:14px">
+  <div class="label">Ostatnie rady dzienne</div>
+  <table><thead><tr><th>Sesja</th><th>Werdykt</th><th>p. wzrostu</th><th>Reżim</th><th>Wejście</th><th>Stop</th><th>Wynik</th></tr></thead>
+  <tbody id="drows"></tbody></table>
+</section>
+<h1 style="margin-top:28px">SYGNAŁ M15 (strategia reguł, niezwalidowana)</h1>
 <div class="grid">
   <section class="card">
     <div class="label">Werdykt</div>
@@ -64,9 +95,50 @@ th{color:var(--muted);font-weight:500}
 <script>
 const REG = {SPRZYJA_KUPNIE:"sprzyja kupnie", NEUTRALNY:"neutralny", SPRZYJA_SPRZEDAZY:"sprzyja sprzedaży"};
 const fmt = v => v == null ? "-" : Number(v).toFixed(2);
-let chart;
+let chart, dchart;
+function renderDaily(d){
+  if(!d) return;
+  const v = d.latest, el = document.getElementById("dverdict");
+  const rep = d.report || {};
+  const edge = document.getElementById("edge");
+  if(rep.edge_text){edge.textContent = rep.edge_text; edge.className = "edge " + (rep.has_edge ? "ok" : "no");}
+  if(!v){el.textContent="brak werdyktu (uruchom: python main.py daily)"; el.className="CZEKAJ";}
+  else{
+    el.textContent = v.verdict + "  ·  p. wzrostu " + Math.round(100*v.p_up) + "%"; el.className = v.verdict;
+    const lv = document.getElementById("dlevels"); lv.replaceChildren();
+    if(v.entry!=null){[["Wejście",v.entry],["Stop",v.sl],["Horyzont",v.horizon+" sesji"]].forEach(([n,x])=>{
+      const dv=document.createElement("div");dv.textContent=n;const b=document.createElement("b");b.textContent=typeof x==="number"?fmt(x):x;dv.prepend(b);lv.appendChild(dv);});}
+    document.getElementById("dreasoning").textContent = v.reasoning;
+    document.getElementById("dupdated").textContent = "Sesja: " + v.time.slice(0,10) + (rep.trained_at ? "  ·  model z " + rep.trained_at.slice(0,10) : "");
+  }
+  const km = document.getElementById("dmodel"); km.replaceChildren();
+  const o = rep.out_of_sample || {}, b = (rep.regime_baseline||{}).out_of_sample || {};
+  [["AUC",o.auc],["Sharpe",o.sharpe],["t-stat",o.tstat],["Zwrot",o["return_%"]!=null?o["return_%"]+"%":null],
+   ["Obsunięcie",o["max_dd_%"]!=null?o["max_dd_%"]+"%":null],["Kup i trzymaj",o["bh_return_%"]!=null?o["bh_return_%"]+"%":null],
+   ["Same reguły: Sharpe",b.sharpe],["Próg rady",rep.threshold]].forEach(([n,x])=>{
+    const dv=document.createElement("div");dv.textContent=n;const bb=document.createElement("b");bb.textContent=x==null?"-":x;dv.prepend(bb);km.appendChild(dv);});
+  const st = document.getElementById("dstats"); st.replaceChildren();
+  const S = d.stats || {};
+  const items = S.trades ? [["Rady",S.trades],["Trafność",S["win_rate_%"]+"%"],["Śr. R",S.avg_R],["Suma R",S.total_R],["Maks. spadek R",S.max_drawdown_R]] : [["Rady","0"]];
+  items.forEach(([n,x])=>{const dv=document.createElement("div");dv.textContent=n;const bb=document.createElement("b");bb.textContent=x;dv.prepend(bb);st.appendChild(dv);});
+  const rows = document.getElementById("drows"); rows.replaceChildren();
+  (d.recent||[]).forEach(r=>{const tr=document.createElement("tr");
+    cell(tr,r.time.slice(0,10)); cell(tr,r.verdict,r.verdict); cell(tr,r.p_up==null?"-":Math.round(100*r.p_up)+"%"); cell(tr,REG[r.regime]||r.regime);
+    cell(tr,fmt(r.entry)); cell(tr,fmt(r.sl));
+    cell(tr,r.outcome_r==null?(r.status==="OPEN"?"otwarta":"-"):r.status+" "+Number(r.outcome_r).toFixed(2)+"R");
+    rows.appendChild(tr);});
+  const labels = (d.candles||[]).map(c=>c.t.slice(0,10)), data = (d.candles||[]).map(c=>c.c);
+  const marks = labels.map(()=>null), pc = labels.map(()=>"transparent");
+  (d.recent||[]).forEach(r=>{if(r.entry==null) return; const i=labels.indexOf(r.time.slice(0,10)); if(i>=0){marks[i]=r.entry; pc[i]=r.verdict==="KUP"?"#3fb68b":"#e5534b";}});
+  const cfg = {labels, datasets:[{label:"Cena",data,borderColor:"#d4af37",borderWidth:1.5,pointRadius:0,tension:.1},
+    {label:"Rady",data:marks,showLine:false,pointRadius:7,pointStyle:"triangle",pointBackgroundColor:pc,pointBorderColor:pc}]};
+  if(dchart){dchart.data=cfg;dchart.update("none");}
+  else dchart=new Chart(document.getElementById("dchart"),{type:"line",data:cfg,options:{maintainAspectRatio:false,animation:false,
+    plugins:{legend:{display:false}},scales:{x:{ticks:{maxTicksLimit:8,color:"#8b929b",maxRotation:0},grid:{color:"#262c34"}},y:{ticks:{color:"#8b929b"},grid:{color:"#262c34"}}}}});
+}
 function cell(tr, text, cls){const td=document.createElement("td");td.textContent=text;if(cls)td.className=cls;tr.appendChild(td);}
 function render(s){
+  renderDaily(s.daily);
   const v = s.latest;
   const vEl = document.getElementById("verdict");
   if(!v){vEl.textContent="brak danych";vEl.className="CZEKAJ";return;}

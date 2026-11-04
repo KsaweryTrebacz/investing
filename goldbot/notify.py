@@ -46,3 +46,12 @@ def telegram_sender():
                           json={"chat_id": chat, "text": text}, timeout=15)
         r.raise_for_status()
     return send
+
+
+def format_daily_message(v: dict) -> str:
+    lines = [f"XAU/USD dziennie: {v['verdict']}  (p. wzrostu {100 * v['p_up']:.0f}%)",
+             f"Reżim dzienny: {REGIME_PL[v['regime']]}"]
+    if v["entry"] is not None:
+        lines.append(f"Wejście ok. {v['entry']:.2f}  stop {v['sl']:.2f}  horyzont {v['horizon']} sesji")
+    lines += [v["reasoning"], f"Sesja z {v['time'][:10]}", DISCLAIMER]
+    return "\n".join(lines)
