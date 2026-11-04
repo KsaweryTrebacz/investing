@@ -1,7 +1,7 @@
 # Optymalizacja i testy skuteczności na publicznych danych złota
 
-Data: 2026-10-26. Wyniki surowe: `docs/research/wyniki/` (study.json, trend.json, edges.json, leverage.json, sizing.json, grid_full_period.csv.gz).
-Kod: `goldbot/research/` (datasets.py, study.py, trend.py, edges.py, leverage.py, sizing.py, download.sh).
+Data: 2026-10-26. Wyniki surowe: `docs/research/wyniki/` (study.json, trend.json, edges.json, leverage.json, sizing.json, paper_trend.json, grid_full_period.csv.gz).
+Kod: `goldbot/research/` (datasets.py, study.py, trend.py, edges.py, leverage.py, sizing.py, paper_trend.py, download.sh).
 
 ## Wniosek
 
@@ -185,6 +185,25 @@ Stała docelowa zmienność, momentum 120 dni, finansowanie −5% (2008–2024, 
 - **Optimum oznacza ogromne spadki** (−86% przy 50%). Cel 30% daje 93% kapitału końcowego optimum przy spadku −65%, a cel 20% daje 73% przy spadku −48%.
 - **Zysk pochodzi głównie z hossy złota** (2009–2011, 2019–2024). Sam filtr momentum nie jest istotny statystycznie (t ≈ 1–2), więc wynik zakłada, że złoto dalej będzie wyraźnie trendować. Strategia doradcy M15 i krótka pozycja w godzinach Londynu mają ujemną wartość oczekiwaną, więc ich optymalna dźwignia to 0.
 
+### 11. Symulacja rachunku według rad programu, 2005–2025 (research/paper_trend.py)
+
+Tryb `trend_d1` w takiej postaci, w jakiej działa w programie. Po zamknięciu każdej świecy D1 rada liczy się funkcjami `momentum.signal` i `momentum.advise`, z progiem 10% i pełnymi uncjami. Transakcja wykonuje się na otwarciu następnego dnia po ASK/BID, do tego finansowanie od całej wartości i likwidacja przez brokera (1:50, 50% depozytu). Start: 20 000 USD 3.01.2005, koniec 21.03.2025.
+
+| Wariant | Kapitał końcowy | Roczne tempo | Największy spadek | 4 mies.: mediana / P(strata) / P(+80%) / najgorsze |
+|---|---|---|---|---|
+| **Cel 50%, finansowanie −5%** | **213 366 USD (×10,7)** | 12,4% | **−87,7%** | 0,0% / 44% / 2,5% / −48% |
+| Cel 30%, finansowanie −5% | 132 450 USD (×6,6) | 9,8% | −67,3% | +0,4% / 42% / 0% / −31% |
+| Cel 50%, finansowanie −2,5% | 715 275 USD (×35,8) | 19,4% | −81,8% | +1,4% / 42% / 2,9% / −46% |
+| Cel 30%, finansowanie −2,5% | 283 189 USD (×14,2) | 14,0% | −58,9% | +1,0% / 39% / 0% / −29% |
+| Kup i trzymaj 1x, finansowanie −5% | 50 638 USD (×2,5) | 4,7% | −56,3% | +1,9% / 43% / 0% / −23% |
+
+Cel 50%, finansowanie −5%, wynik roczny: 2005 +21%, 2006 0%, 2007 +67%, 2008 −8%, 2009 +61%, 2010 +110%, 2011 +38%, 2012 −38%, 2013 −16%, 2014 −19%, 2015 −1%, 2016 −16%, 2017 −9%, 2018 −25%, 2019 +61%, 2020 +67%, 2021 −40%, 2022 −16%, 2023 +11%, 2024 +104%, 2025 do 21.03 +67%.
+
+- Rachunek osiągnął szczyt 276 415 USD w sierpniu 2011, potem przez 8 lat spadał do 34 046 USD (maj 2019, −87,7%). Do marca 2025 nie odrobił tamtego szczytu.
+- W 20 latach było 714 transakcji: 87 otwarć, 86 zamknięć i 541 zmian wielkości. Likwidacji przez brokera nie było, bo dźwignia nie przekraczała 11,2:1.
+- Kontrola: na latach 2008–2024 symulacja według rad daje ×3,17 wobec ×3,46 w punkcie 10. Różnica wynika z wykonania na otwarciu następnego dnia, progu 10% i zaokrąglania do uncji.
+- Prawdziwy cykl programu (`run_cycle` w trybie `trend_d1`, raport i decyzja) uruchomiony dzień po dniu na ostatnich 150 dniach danych, z plikiem pozycji aktualizowanym według rad, zgadza się z symulacją w 99% dni co do akcji i wielkości pozycji. Na tym odcinku (21.08.2024 – 21.03.2025) rachunek urósł z 20 000 do 37 189 USD.
+
 ## Zmiany w programie
 
 - `strategy_validated` w konfiguracji instrumentu (domyślnie `false`): sygnał M15 daje najwyżej „obserwację”, a plan jest pokazany jako wstrzymany, z odnośnikiem do tego raportu. Zmienić na `true` można dopiero, gdy `python main.py validate` na danych Twojego brokera da dodatni wynik na okresie kontrolnym po kosztach i przy rozsądnej liczbie transakcji.
@@ -210,6 +229,7 @@ python -m research.trend --broker ../dane/XAU_15m_data.csv --dukascopy ../dane/d
 python -m research.edges --broker ../dane/XAU_15m_data.csv --dukascopy ../dane/dukascopy_m15 --out ../wyniki
 python -m research.leverage --broker ../dane/XAU_15m_data.csv --dukascopy ../dane/dukascopy_m15 --out ../wyniki
 python -m research.sizing --broker ../dane/XAU_15m_data.csv --dukascopy ../dane/dukascopy_m15 --out ../wyniki
+python -m research.paper_trend --broker ../dane/XAU_15m_data.csv --dukascopy ../dane/dukascopy_m15 --out ../wyniki
 ```
 
 Pełna siatka liczy się 10–15 minut na 4 rdzeniach.
