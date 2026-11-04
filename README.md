@@ -39,6 +39,8 @@ Bez stopu kroczącego (sam sygnał): Sharpe 1,07 / 0,95, obsunięcie -8,6% / -23
 
 Historia: pierwsza wersja (gradient boosting, bez cech kształtu wykresu, tryb długa/krótka) nie miała przewagi i program mówił tylko CZEKAJ. Obecny wariant został wybrany eksperymentem z 18 kombinacji (horyzont, cechy, model), gdzie kryterium wyboru był wyłącznie okres strojenia.
 
+Sprawdzone później i odrzucone (2026-11-04): pozycjonowanie spekulantów z raportów COT (CFTC), dzienny indeks ryzyka geopolitycznego GPR (Caldara i Iacoviello) i oczekiwana inflacja (FRED T10YIE). COT pogarsza okres strojenia (Sharpe 0,78). GPR, inflacja i wszystkie trzy razem poprawiają okres strojenia (1,37, 1,35, 1,48), ale pogarszają kontrolny (1,23, 1,06, 0,97 wobec 1,33) i zwiększają obsunięcie. Im więcej cech, tym lepiej w strojeniu i gorzej poza nim, czyli dopasowanie do szumu. Wniosek: na tym zbiorze danych okres strojenia przestał odróżniać poprawę od przypadku, więc dokładanie danych zostało zakończone. Wynik kontrolny obecnego modelu (Sharpe 1,33) należy traktować jako lekko zawyżony, bo decyzja „zostaw" też korzystała z tej wiedzy.
+
 ## Dane
 
 Źródło wybiera się samo (`--source auto`):
