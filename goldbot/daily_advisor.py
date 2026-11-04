@@ -12,7 +12,8 @@ TRADE = ("KUP", "SPRZEDAJ")
 
 def _fmt_feature(name: str, value: float) -> str:
     pl = FEATURES_PL.get(name, name)
-    if name.startswith("ret_") or name.startswith("dist_") or name in ("vol20", "atr_pct"):
+    pct_prefix = ("ret_", "dist_", "brk_", "mom_", "dd_from", "run_from", "ema_slope", "gap_pct", "body_pct")
+    if name.startswith(pct_prefix) or name in ("vol20", "atr_pct", "atr_trend", "vol_ratio"):
         return f"{pl} {100 * value:+.1f}%"
     if name.startswith("reg_"):
         return f"{pl} {'+' if value > 0 else '-' if value < 0 else '0'}"
@@ -21,8 +22,12 @@ def _fmt_feature(name: str, value: float) -> str:
 
 def make_daily_verdict(last_row: pd.Series, p_up: float, thr: float, has_edge: bool, edge_text: str,
                        open_v: dict | None, drivers: list, stats: dict, warnings: list,
-                       horizon: int = 10, stop_atr: float = STOP_ATR) -> dict:
-    """last_row: ostatni wiersz cech (index=time) z kolumnami close, atr, bid_c, ask_c, regime."""
+                       horizon: int = 10, stop_atr: float = STOP_ATR, mode: str = "long") -> dict:
+    """last_row: ostatni wiersz cech (index=time) z kolumnami close, atr, bid_c, ask_c, regime.
+
+    mode "long": w złocie (p_up >= próg) albo w gotówce; wyjście, gdy p_up spada pod próg (jak w backteście).
+    mode "ls": długa / krótka; wyjście, gdy prognoza przejdzie na przeciwną stronę progu.
+    """
     t = last_row.name
     regime = last_row["regime"]
     close, atr_v = float(last_row["close"]), float(last_row["atr"])
@@ -33,17 +38,19 @@ def make_daily_verdict(last_row: pd.Series, p_up: float, thr: float, has_edge: b
     lines.append(f"Reżim dzienny: {REGIME_PL[regime]} ({regime_text(last_row)}).")
 
     verdict, entry, sl, close_open = "CZEKAJ", None, None, False
-    want_long, want_short = p_up >= thr, p_up <= 1 - thr
+    want_long = p_up >= thr
+    want_short = (p_up <= 1 - thr) if mode == "ls" else False
+    exit_long = (p_up < thr) if mode == "long" else (p_up <= 1 - thr)
 
     if not has_edge:
         lines.insert(0, edge_text + ". Rady handlowe wstrzymane; prognoza tylko informacyjnie.")
     elif open_v is not None:
         side = 1 if open_v["verdict"] == "KUP" else -1
         still = p_up > 0.5 if side == 1 else p_up < 0.5
-        if (side == 1 and want_short) or (side == -1 and want_long):
+        if (side == 1 and exit_long) or (side == -1 and want_long):
             verdict, close_open = "ZAMKNIJ", True
-            lines.append(f"Prognoza przeszła na przeciwną stronę progu: zamknij radę {open_v['verdict']} "
-                         f"z {open_v['time'][:10]} po ok. {bid if side == 1 else ask:.2f}.")
+            lines.append(f"Prognoza spadła pod próg: zamknij radę {open_v['verdict']} "
+                         f"z {open_v['time'][:10]} po ok. {bid if side == 1 else ask:.2f} (do gotówki).")
         elif still:
             verdict = "TRZYMAJ"
             lines.append(f"Otwarta rada {open_v['verdict']} z {open_v['time'][:10]} (wejście {open_v['entry']:.2f}, "
@@ -62,6 +69,8 @@ def make_daily_verdict(last_row: pd.Series, p_up: float, thr: float, has_edge: b
         lines.append(f"Wejście po bid ok. {entry:.2f}, stop {sl:.2f} ({stop_atr:g} ATR), horyzont {horizon} sesji.")
     elif want_long or want_short:
         lines.append("Prognoza przekroczyła próg, ale reżim dzienny jest przeciwny; bez rady handlowej.")
+    elif mode == "long":
+        lines.append("Prognoza pod progiem: według modelu nie opłaca się teraz być w złocie; zostajemy w gotówce.")
     else:
         lines.append("Prognoza w strefie niepewności; czekamy.")
 

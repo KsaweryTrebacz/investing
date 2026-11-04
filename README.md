@@ -1,31 +1,39 @@
 # Doradca do złota (XAU/USD)
 
-Lokalny program, który raz dziennie mówi, czy według modelu warto złoto kupić, sprzedać, trzymać, czy czekać. Pokazuje poziom wejścia, stop i uzasadnienie po polsku. Nie składa zleceń, tylko podpowiada.
+Lokalny program, który raz dziennie mówi, czy według modelu opłaca się teraz być w złocie, czy lepiej siedzieć w gotówce. Pokazuje poziom wejścia, stop i uzasadnienie po polsku. Nie składa zleceń, tylko podpowiada.
 
-To nie jest porada inwestycyjna. Program jest zbudowany tak, żeby nie udawać pewności, której nie ma: rady handlowe KUP/SPRZEDAJ wydaje tylko wtedy, gdy model ma udowodnioną przewagę poza próbą. Dziś jej **nie ma** (patrz niżej), więc program mówi CZEKAJ i pokazuje prognozę tylko informacyjnie.
+To nie jest porada inwestycyjna. Program jest zbudowany tak, żeby nie udawać pewności, której nie ma: rady KUP wydaje tylko wtedy, gdy model ma udowodnioną przewagę poza próbą, sprawdzaną co tydzień od nowa.
 
 ## Co jest w środku
 
 Dwie warstwy, każda ma własne komendy:
 
-1. **Model dzienny (nowy, główny).** Gradient boosting (scikit-learn) na ok. 18 cechach z danych dziennych: zwroty 1-60 sesji, odległość od EMA 50/200, RSI, zmienność, pozycja w zakresie roku, zmiany indeksu dolara i realnych rentowności 10Y, składniki reżimu. Cel: czy złoto w 10 sesji urośnie więcej niż koszt spreadu. Model jest uczony walk-forward (okno rozszerzające, pierwsze 5 lat tylko do nauki, przeuczanie co kwartał), więc każda prognoza w historii jest poza próbą. Próg rady jest wybierany wyłącznie na prognozach do końca 2020, a lata 2021-2026 to okres kontrolny.
-2. **Sygnał M15 (stary).** Reguły EMA 200 / RSI / MACD z reżimem dziennym. Nie był sprawdzony na prawdziwych danych M15 (wymaga OANDA). Zostaje w kodzie, ale nie jest zalecany.
+1. **Model dzienny (główny).** Regresja logistyczna na 44 cechach z danych dziennych: zwroty 1-60 sesji, EMA, RSI, zmienność, dolar i realne rentowności, oraz kształt wykresu (korpus i cienie świec, serie, odległość od wybić 20/55 sesji, wyższe szczyty i niższe dołki, obsunięcie od szczytu roku, reżim zmienności, momentum 6 i 12 miesięcy, układ średnich, efektywność ruchu). Cel: czy złoto w 10 sesji urośnie więcej niż koszt spreadu. Model jest uczony walk-forward (pierwsze 5 lat tylko do nauki, przeuczanie co kwartał), więc każda prognoza w historii jest poza próbą.
+2. **Sygnał M15 (stary).** Reguły EMA 200 / RSI / MACD. Nie był sprawdzony na prawdziwych danych M15 (wymaga OANDA). Zostaje w kodzie, nie jest zalecany.
+
+### Tryb: w złocie albo w gotówce
+
+Model ma dwa tryby: „long" (w złocie, gdy prawdopodobieństwo wzrostu przekracza próg, inaczej w gotówce) i „ls" (długa/krótka). Tryb, próg i rodzaj modelu zostały wybrane **wyłącznie po okresie strojenia** (prognozy do końca 2020). Lata 2021-2026 to okres kontrolny, który nie brał udziału w wyborze. Gra na spadki (tryb „ls") nie ma przewagi i jest wyłączona.
 
 ### Bramka przewagi
 
-Model „ma przewagę" tylko, gdy w **obu** okresach (strojenia i kontrolnym) AUC > 0,52, Sharpe > 0 i zwrot > 0, a w okresie kontrolnym t-stat dziennych zwrotów > 1,65. Dobry wynik w jednym okresie to za mało: może być hossą złota, nie umiejętnością modelu. Gdy bramka nie przepuszcza, `daily` zawsze daje CZEKAJ i mówi dlaczego.
+Model „ma przewagę" tylko, gdy w **obu** okresach (strojenia i kontrolnym) strategia zarabia i ma lepszy Sharpe niż kup-i-trzymaj, a w okresie kontrolnym t-stat dziennych zwrotów > 1,65. Dobry wynik w jednym okresie to za mało. Gdy bramka nie przepuszcza, `daily` zawsze daje CZEKAJ i mówi dlaczego.
 
 ### Wynik walidacji z 2026-11-04 (prawdziwe dane, 2011-2026)
 
-| | okres strojenia 2016-2020 | okres kontrolny 2021-2026 |
+| tryb w złocie albo w gotówce | okres strojenia 2016-2020 | okres kontrolny 2021-2026 |
 |---|---|---|
-| AUC | 0,465 | 0,539 |
-| Sharpe po kosztach | -0,03 | 0,23 |
-| t-stat | -0,05 | 0,55 |
-| zwrot strategii | -1,2% | +21,5% |
-| kup i trzymaj | +53,0% | +108,1% |
+| Sharpe strategii | 1,07 | 0,95 |
+| Sharpe kup-i-trzymaj | 0,71 | 0,65 |
+| t-stat | 2,17 | 2,29 |
+| zwrot strategii | +37% | +93% |
+| zwrot kup-i-trzymaj | +53% | +102% |
+| maks. obsunięcie | -8,6% | -23,9% |
+| czas w rynku | 25% dni | 36% dni |
 
-Same reguły reżimu (bez ML) są równie słabe: Sharpe 0,02 i 0,13. Wniosek: na tych cechach kierunek złota w horyzoncie 10 sesji nie jest przewidywalny w sposób, na którym można zarabiać. Program to mówi i nie wydaje rad handlowych. Komenda `train` liczy to od nowa na świeżych danych, więc jeśli kiedyś przewaga się pojawi, bramka się otworzy sama.
+Co to znaczy: model nie wygrywa z trzymaniem złota w hossie na samym zwrocie, ale daje zbliżony wynik przy 1/3 czasu w rynku i lepszym stosunku zysku do ryzyka. Słabe lata: 2021 (-4%) i 2026 (-5%, obsunięcie -24%). Najważniejsze cechy: odległość od dołka 20 sesji, odległość od szczytu 55 sesji, wzrost od dołka roku, czyli model lubi złoto po wybiciu w górę i unika go po załamaniu. Kierunku pojedynczego dnia model nie przewiduje (AUC ok. 0,5); przewaga bierze się z unikania złych okresów.
+
+Historia: pierwsza wersja (gradient boosting, bez cech kształtu wykresu, tryb długa/krótka) nie miała przewagi i program mówił tylko CZEKAJ. Obecny wariant został wybrany eksperymentem z 18 kombinacji (horyzont, cechy, model), gdzie kryterium wyboru był wyłącznie okres strojenia.
 
 ## Dane
 
@@ -62,12 +70,14 @@ Z katalogu `goldbot`:
 
 ```
 python main.py train              # walidacja walk-forward + uczenie; zapisuje model.joblib i model_report.json
-python main.py daily              # werdykt dzienny: KUP / SPRZEDAJ / TRZYMAJ / ZAMKNIJ / CZEKAJ
+python main.py daily              # werdykt dzienny: KUP / TRZYMAJ / ZAMKNIJ / CZEKAJ
 python main.py dashboard          # http://localhost:8787
 python -m pytest tests -q
 ```
 
-Flagi `--source auto|free|oanda`, `--years 15`, `--offline` (tylko pamięć podręczna). Najpierw `train`, potem `daily`. Rady dzienne lądują w `goldbot/goldbot.db` i są rozliczane po fakcie (stop albo koniec horyzontu 10 sesji), z czego dashboard liczy skuteczność.
+Flagi `--source auto|free|oanda`, `--years 15`, `--offline` (tylko pamięć podręczna). Najpierw `train`, potem `daily`.
+
+Werdykty: KUP (wejdź w złoto, stop 2 ATR), TRZYMAJ (prognoza nadal nad progiem), ZAMKNIJ (prognoza spadła pod próg, wyjdź do gotówki), CZEKAJ (w gotówce). Rady lądują w `goldbot/goldbot.db` i są rozliczane po fakcie, z czego dashboard liczy skuteczność.
 
 Stara warstwa M15: `python main.py cycle`, `python main.py validate`, oba z `--demo` na danych syntetycznych.
 
@@ -91,8 +101,9 @@ Unregister-ScheduledTask -TaskName GoldAdvisorDaily,GoldAdvisorTrain -Confirm:$f
 goldbot/
   main.py            komendy (train, daily, dashboard, cycle, validate)
   sources.py         dane dzienne: Yahoo+FRED albo OANDA, cache, świeżość, kontrola krzyżowa
-  features.py        cechy przyczynowe i cel prognozy
-  model.py           walk-forward, metryki, bramka przewagi, zapis modelu
+  features.py        cechy bazowe i cel prognozy
+  patterns.py        cechy kształtu wykresu
+  model.py           walk-forward, metryki, tryby, bramka przewagi, zapis modelu
   daily_advisor.py   werdykt dzienny i rozliczanie rad
   daily_cycle.py     jeden cykl dzienny
   install_daily_task.ps1

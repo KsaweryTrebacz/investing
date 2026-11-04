@@ -19,7 +19,7 @@ class FakeModel:
 
 
 def bundle(p):
-    return {"model": FakeModel(p), "features": FEATURES, "threshold": 0.6,
+    return {"model": FakeModel(p), "features": FEATURES, "threshold": 0.6, "mode": "ls",
             "importances": {f: 0.0 for f in FEATURES} | {"ret_20": 1.0, "rsi14": 0.5, "reg_trend": 0.2}}
 
 

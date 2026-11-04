@@ -41,10 +41,10 @@ def test_walk_forward_finds_planted_signal():
     feat = build_features(predictable_gold(), None, None)
     report, p = M.evaluate(feat, split="2017-12-31")
     assert report["out_of_sample"]["auc"] > 0.6
-    assert report["has_edge"]
-    assert report["in_sample"]["auc"] > 0.6 and report["out_of_sample"]["tstat"] > M.MIN_TSTAT
+    assert report["has_edge"] and report["mode"] in M.MODES
+    assert report["out_of_sample"]["tstat"] > M.MIN_TSTAT
     assert report["threshold"] in M.GRID
-    assert "in_sample" in report["regime_baseline"]
+    assert "in_sample" in report["regime_baseline"] and set(report["modes"]) == set(M.MODES)
     assert set(report["by_year"]) >= {2018, 2019}
 
 
@@ -54,25 +54,29 @@ def test_metrics_on_handmade_series():
     r1 = pd.Series(np.r_[np.full(150, 0.001), np.full(150, -0.001)], index=idx)  # zawsze zgodnie z pozycją
     y = (r1 > 0).astype(float)
     cost = pd.Series(0.0, index=idx)
-    m = M.metrics(p, y, r1, cost, thr=0.6)
+    m = M.metrics(p, y, r1, cost, thr=0.6, mode="ls")
     assert m["n"] == 300 and m["flips"] == 2  # wejście w długą, potem zmiana na krótką
+    ml = M.metrics(p, y, r1, cost, thr=0.6, mode="long")
+    assert ml["flips"] == 2 and ml["days_short_%"] == 0 and abs(ml["return_%"] - 100 * (np.exp(0.15) - 1)) < 0.01
     assert abs(m["return_%"] - 100 * (np.exp(0.3) - 1)) < 0.01  # metryka zaokrąglona do 2 miejsc
     assert m["auc"] == 1.0 and m["max_dd_%"] == 0.0
 
 
-def test_edge_verdict_requires_both_periods_and_significance():
-    base = {"n": 1000, "from": "2021-01-04", "to": "2026-11-03", "bh_return_%": 50.0, "max_dd_%": -10.0}
-    good = {**base, "auc": 0.56, "sharpe": 0.8, "return_%": 12.0, "tstat": 2.1}
-    bad_auc = {**base, "auc": 0.50, "sharpe": 0.3, "return_%": 5.0, "tstat": 2.1}
-    bad_sh = {**base, "auc": 0.56, "sharpe": -0.1, "return_%": -2.0, "tstat": -0.3}
+def test_edge_verdict_requires_both_periods_beating_hold_and_significance():
+    base = {"n": 1000, "from": "2021-01-04", "to": "2026-11-03", "bh_return_%": 50.0, "max_dd_%": -10.0,
+            "days_long_%": 30.0, "days_short_%": 0.0, "bh_sharpe": 0.5}
+    good = {**base, "sharpe": 0.8, "return_%": 12.0, "tstat": 2.1}
+    worse_than_hold = {**base, "sharpe": 0.4, "return_%": 5.0, "tstat": 2.1}
+    bad_sh = {**base, "sharpe": -0.1, "return_%": -2.0, "tstat": -0.3}
     weak_t = {**good, "tstat": 1.0}
-    assert M.edge_verdict(good, good) == (True, M.edge_verdict(good, good)[1])
-    assert "ma przewagę" in M.edge_verdict(good, good)[1]
-    assert not M.edge_verdict(bad_auc, good)[0]   # słaby okres strojenia
-    assert not M.edge_verdict(good, bad_sh)[0]    # słaby okres kontrolny
-    assert not M.edge_verdict(good, weak_t)[0]    # nieistotne statystycznie
+    ok, txt = M.edge_verdict(good, good)
+    assert ok and "ma przewagę" in txt and "w gotówce" in txt
+    assert not M.edge_verdict(worse_than_hold, good)[0]   # nie bije kup-i-trzymaj w strojeniu
+    assert not M.edge_verdict(good, bad_sh)[0]            # słaby okres kontrolny
+    assert not M.edge_verdict(good, weak_t)[0]            # nieistotne statystycznie
     ok, txt = M.edge_verdict({"n": 100}, good)
     assert not ok and "za mało" in txt
+    assert "długa/krótka" in M.edge_verdict(good, good, "ls")[1]
 
 
 def test_fit_final_save_load_predict(tmp_path):
@@ -84,5 +88,5 @@ def test_fit_final_save_load_predict(tmp_path):
     b = M.load_model(path)
     p = M.predict_last(b, feat)
     assert 0.0 <= p <= 1.0
-    assert len(M.top_drivers(b, feat)) == 3
+    assert len(M.top_drivers(b, feat)) == 3 and b["mode"] == "long"
     assert M.load_model(str(tmp_path / "none.joblib")) is None

@@ -52,7 +52,8 @@ def run_daily_cycle(data: DailyData, bundle: dict, report: dict, store, send=Non
     p_up = predict_last(bundle, feat)
     open_v = (store.open_verdicts(KIND) or [None])[0]
     v = make_daily_verdict(row, p_up, bundle["threshold"], report["has_edge"], report["edge_text"], open_v,
-                           top_drivers(bundle, feat), store.stats(KIND), warnings, horizon=report["horizon"])
+                           top_drivers(bundle, feat), store.stats(KIND), warnings, horizon=report["horizon"],
+                           mode=bundle.get("mode", "long"))
     if stale and v["verdict"] in TRADE:
         v.update(verdict="CZEKAJ", entry=None, sl=None, status="NONE",
                  reasoning="Rada handlowa wstrzymana: dane nieaktualne. " + v["reasoning"])

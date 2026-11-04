@@ -27,7 +27,8 @@ def build_state(store: Store, n_candles: int = 200) -> dict:
             "stats": store.stats("D1"),
             "last_update": d["time"].iloc[-1].isoformat() if len(d) else None,
             "candles": [{"t": t.isoformat(), "c": float(v)} for t, v in zip(d["time"], ((d["bid_c"] + d["ask_c"]) / 2).round(2))],
-            "report": {k: rep.get(k) for k in ("has_edge", "edge_text", "threshold", "trained_at", "out_of_sample", "in_sample", "regime_baseline")},
+            "report": {k: rep.get(k) for k in ("has_edge", "edge_text", "threshold", "trained_at", "out_of_sample",
+                                               "in_sample", "regime_baseline", "mode", "model_kind")},
         },
         "candles": [{"t": t.isoformat(), "c": float(v)} for t, v in zip(c["time"], mid)],
         "marks": [{"t": r["time"], "verdict": r["verdict"], "entry": r["entry"]}

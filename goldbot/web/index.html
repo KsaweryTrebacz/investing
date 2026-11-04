@@ -41,7 +41,7 @@ th{color:var(--muted);font-weight:500}
 <h1>DORADCA XAU/USD</h1>
 <div class="grid">
   <section class="card">
-    <div class="label">Werdykt dzienny (model predykcyjny, horyzont 10 sesji)</div>
+    <div class="label" id="dlabel">Werdykt dzienny (model predykcyjny, horyzont 10 sesji)</div>
     <div id="dverdict" class="CZEKAJ">...</div>
     <div id="edge" class="edge no">brak raportu modelu</div>
     <div class="levels" id="dlevels"></div>
@@ -102,6 +102,7 @@ function renderDaily(d){
   const rep = d.report || {};
   const edge = document.getElementById("edge");
   if(rep.edge_text){edge.textContent = rep.has_edge ? "Model ma przewagę poza próbą: rady handlowe aktywne" : "Model bez udowodnionej przewagi poza próbą: rady handlowe wstrzymane"; edge.className = "edge " + (rep.has_edge ? "ok" : "no");}
+  if(rep.mode){document.getElementById("dlabel").textContent = "Werdykt dzienny (horyzont 10 sesji, tryb: " + (rep.mode==="long" ? "w złocie albo w gotówce" : "długa/krótka") + ")";}
   if(!v){el.textContent="brak werdyktu (uruchom: python main.py daily)"; el.className="CZEKAJ";}
   else{
     el.textContent = v.verdict + "  ·  p. wzrostu " + Math.round(100*v.p_up) + "%"; el.className = v.verdict;
@@ -115,7 +116,7 @@ function renderDaily(d){
   const o = rep.out_of_sample || {}, b = (rep.regime_baseline||{}).out_of_sample || {};
   [["AUC",o.auc],["Sharpe",o.sharpe],["t-stat",o.tstat],["Zwrot",o["return_%"]!=null?o["return_%"]+"%":null],
    ["Obsunięcie",o["max_dd_%"]!=null?o["max_dd_%"]+"%":null],["Kup i trzymaj",o["bh_return_%"]!=null?o["bh_return_%"]+"%":null],
-   ["Same reguły: Sharpe",b.sharpe],["Próg rady",rep.threshold]].forEach(([n,x])=>{
+   ["Kup i trzymaj: Sharpe",o.bh_sharpe],["Same reguły: Sharpe",b.sharpe],["Próg rady",rep.threshold]].forEach(([n,x])=>{
     const dv=document.createElement("div");dv.textContent=n;const bb=document.createElement("b");bb.textContent=x==null?"-":x;dv.prepend(bb);km.appendChild(dv);});
   const st = document.getElementById("dstats"); st.replaceChildren();
   const S = d.stats || {};

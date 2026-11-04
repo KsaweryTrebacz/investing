@@ -114,13 +114,16 @@ def cmd_train(args):
     report, _ = M.evaluate(feat)
     report["source"] = data.source
     pd.set_option("display.width", 200)
-    print("\nModel (próg {:.2f}):".format(report["threshold"]))
+    mode_pl = {"long": "w złocie albo w gotówce", "ls": "długa/krótka"}[report["mode"]]
+    print("\nModel {} (tryb: {}, próg {:.2f}):".format(report["model_kind"], mode_pl, report["threshold"]))
     print(pd.DataFrame({"okres strojenia": report["in_sample"], "okres kontrolny": report["out_of_sample"]}).to_string())
     print("\nSame reguły reżimu (bez ML), do porównania:")
     print(pd.DataFrame({"okres strojenia": report["regime_baseline"]["in_sample"],
                         "okres kontrolny": report["regime_baseline"]["out_of_sample"]}).to_string())
     print("\nRok po roku:")
     print(pd.DataFrame(report["by_year"]).T.to_string())
+    other = [m for m in report["modes"] if m != report["mode"]][0]
+    print("\nDrugi tryb ({}), tylko informacyjnie: {}".format(other, report["modes"][other]["edge_text"]))
     print("\n" + report["edge_text"])
     m, imp = M.fit_final(feat)
     M.save_model(M.MODEL_PATH, m, report["threshold"], imp, report)

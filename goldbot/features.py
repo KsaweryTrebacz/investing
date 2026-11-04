@@ -3,14 +3,16 @@ import numpy as np
 import pandas as pd
 
 from indicators import atr, ema, rsi
+from patterns import PATTERN_FEATURES, PATTERN_FEATURES_PL, add_patterns
 from regime import trend_dir
 
 HORIZON = 10          # sesji do przodu
 MACRO_LAG_DAYS = 1    # FRED/Yahoo publikują z opóźnieniem; wartość z dnia t jest znana dopiero t+1
 
-FEATURES = ["ret_1", "ret_5", "ret_10", "ret_20", "ret_60", "dist_ema50", "dist_ema200", "rsi14",
-            "vol20", "atr_pct", "range_pos250", "usd_chg5", "usd_chg20", "yld_chg5", "yld_chg20",
-            "reg_trend", "reg_dollar", "reg_yields"]
+BASE_FEATURES = ["ret_1", "ret_5", "ret_10", "ret_20", "ret_60", "dist_ema50", "dist_ema200", "rsi14",
+                 "vol20", "atr_pct", "range_pos250", "usd_chg5", "usd_chg20", "yld_chg5", "yld_chg20",
+                 "reg_trend", "reg_dollar", "reg_yields"]
+FEATURES = BASE_FEATURES + PATTERN_FEATURES
 
 FEATURES_PL = {
     "ret_1": "zwrot 1 sesji", "ret_5": "zwrot 5 sesji", "ret_10": "zwrot 10 sesji",
@@ -20,6 +22,7 @@ FEATURES_PL = {
     "usd_chg5": "zmiana dolara 5 sesji", "usd_chg20": "zmiana dolara 20 sesji",
     "yld_chg5": "zmiana realnych stóp 5 sesji", "yld_chg20": "zmiana realnych stóp 20 sesji",
     "reg_trend": "trend złota (reżim)", "reg_dollar": "dolar (reżim)", "reg_yields": "realne stopy (reżim)",
+    **PATTERN_FEATURES_PL,
 }
 
 
@@ -60,6 +63,8 @@ def build_features(gold: pd.DataFrame, usd=None, yld=None, horizon: int = HORIZO
     f["reg_trend"] = trend_dir(close, 50, 200).to_numpy()
     f["reg_dollar"] = (-trend_dir(u, 20, 50)).to_numpy() if usd is not None else np.nan
     f["reg_yields"] = (-trend_dir(y, 20, 50)).to_numpy() if yld is not None else np.nan
+
+    f = add_patterns(f, mid["o"], high, low, close, g["time"])
 
     f["close"] = close
     f["atr"] = a

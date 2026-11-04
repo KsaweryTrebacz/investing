@@ -15,13 +15,13 @@ def row(regime="NEUTRALNY", close=4000.0, atr=60.0):
 
 EDGE = dict(has_edge=True, edge_text="Model ma przewagę poza próbą; x")
 NO_EDGE = dict(has_edge=False, edge_text="Model nie ma udowodnionej przewagi poza próbą; x")
-DRIVERS = [("ret_20", 0.05), ("rsi14", 61.0), ("reg_trend", 1.0)]
+DRIVERS = [("ret_20", 0.05), ("rsi14", 61.0), ("reg_trend", 1.0), ("brk_lo20", 0.021)]
 STATS = {"trades": 4, "win_rate_%": 50.0, "avg_R": 0.3}
 
 
-def verdict(p_up, regime="NEUTRALNY", open_v=None, edge=EDGE, stats=STATS, warnings=()):
+def verdict(p_up, regime="NEUTRALNY", open_v=None, edge=EDGE, stats=STATS, warnings=(), mode="ls"):
     return make_daily_verdict(row(regime), p_up, 0.6, edge["has_edge"], edge["edge_text"], open_v, DRIVERS,
-                              stats, list(warnings))
+                              stats, list(warnings), mode=mode)
 
 
 def test_no_edge_blocks_trading_but_shows_forecast():
@@ -36,6 +36,7 @@ def test_buy_when_above_threshold_and_regime_not_against():
     assert v["verdict"] == "KUP" and v["status"] == "OPEN"
     assert v["entry"] == 4000.25 and v["sl"] == 4000.25 - 120.0 and v["tp"] is None
     assert "zwrot 20 sesji +5.0%" in v["reasoning"] and "RSI 14 61.00" in v["reasoning"]
+    assert "odległość od dołka 20 sesji +2.1%" in v["reasoning"]
     assert "Dotychczasowe rady dzienne: 4" in v["reasoning"]
 
 
@@ -64,6 +65,16 @@ def test_hold_and_close_with_open_advice():
     assert c["status"] == "NONE"
     # z otwartą radą nie otwieramy nowej, nawet gdy prognoza silna po tej samej stronie
     assert verdict(0.9, open_v=OPEN_BUY)["verdict"] == "TRZYMAJ"
+
+
+def test_long_mode_never_shorts_and_exits_below_threshold():
+    assert verdict(0.3, mode="long")["verdict"] == "CZEKAJ"
+    assert "w gotówce" in verdict(0.3, mode="long")["reasoning"]
+    assert verdict(0.65, mode="long")["verdict"] == "KUP"
+    assert verdict(0.65, open_v=OPEN_BUY, mode="long")["verdict"] == "TRZYMAJ"
+    c = verdict(0.55, open_v=OPEN_BUY, mode="long")       # pod progiem 0.6, choć > 0.5
+    assert c["verdict"] == "ZAMKNIJ" and c["close_open"]
+    assert verdict(0.55, open_v=OPEN_BUY, mode="ls")["verdict"] == "TRZYMAJ"
 
 
 def gold(rows):
