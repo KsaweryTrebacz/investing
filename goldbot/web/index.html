@@ -101,7 +101,7 @@ function renderDaily(d){
   const v = d.latest, el = document.getElementById("dverdict");
   const rep = d.report || {};
   const edge = document.getElementById("edge");
-  if(rep.edge_text){edge.textContent = rep.edge_text; edge.className = "edge " + (rep.has_edge ? "ok" : "no");}
+  if(rep.edge_text){edge.textContent = rep.has_edge ? "Model ma przewagę poza próbą: rady handlowe aktywne" : "Model bez udowodnionej przewagi poza próbą: rady handlowe wstrzymane"; edge.className = "edge " + (rep.has_edge ? "ok" : "no");}
   if(!v){el.textContent="brak werdyktu (uruchom: python main.py daily)"; el.className="CZEKAJ";}
   else{
     el.textContent = v.verdict + "  ·  p. wzrostu " + Math.round(100*v.p_up) + "%"; el.className = v.verdict;
