@@ -42,7 +42,9 @@ def test_walk_forward_finds_planted_signal():
     report, p = M.evaluate(feat, split="2017-12-31")
     assert report["out_of_sample"]["auc"] > 0.6
     assert report["has_edge"]
+    assert report["in_sample"]["auc"] > 0.6 and report["out_of_sample"]["tstat"] > M.MIN_TSTAT
     assert report["threshold"] in M.GRID
+    assert "in_sample" in report["regime_baseline"]
     assert set(report["by_year"]) >= {2018, 2019}
 
 
@@ -58,15 +60,19 @@ def test_metrics_on_handmade_series():
     assert m["auc"] == 1.0 and m["max_dd_%"] == 0.0
 
 
-def test_edge_verdict_rejects_no_edge():
+def test_edge_verdict_requires_both_periods_and_significance():
     base = {"n": 1000, "from": "2021-01-04", "to": "2026-11-03", "bh_return_%": 50.0, "max_dd_%": -10.0}
-    ok, txt = M.edge_verdict({**base, "auc": 0.50, "sharpe": 0.3, "return_%": 5.0})
-    assert not ok and "nie ma" in txt
-    ok, txt = M.edge_verdict({**base, "auc": 0.56, "sharpe": -0.1, "return_%": -2.0})
-    assert not ok
-    ok, txt = M.edge_verdict({**base, "auc": 0.56, "sharpe": 0.8, "return_%": 12.0})
-    assert ok and "ma przewagę" in txt
-    assert not M.edge_verdict({"n": 100})[0]
+    good = {**base, "auc": 0.56, "sharpe": 0.8, "return_%": 12.0, "tstat": 2.1}
+    bad_auc = {**base, "auc": 0.50, "sharpe": 0.3, "return_%": 5.0, "tstat": 2.1}
+    bad_sh = {**base, "auc": 0.56, "sharpe": -0.1, "return_%": -2.0, "tstat": -0.3}
+    weak_t = {**good, "tstat": 1.0}
+    assert M.edge_verdict(good, good) == (True, M.edge_verdict(good, good)[1])
+    assert "ma przewagę" in M.edge_verdict(good, good)[1]
+    assert not M.edge_verdict(bad_auc, good)[0]   # słaby okres strojenia
+    assert not M.edge_verdict(good, bad_sh)[0]    # słaby okres kontrolny
+    assert not M.edge_verdict(good, weak_t)[0]    # nieistotne statystycznie
+    ok, txt = M.edge_verdict({"n": 100}, good)
+    assert not ok and "za mało" in txt
 
 
 def test_fit_final_save_load_predict(tmp_path):

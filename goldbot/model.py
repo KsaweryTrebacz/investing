@@ -21,6 +21,7 @@ STEP = 63                 # przeuczanie co kwartał
 SPLIT_DATE = "2020-12-31"  # próg wybierany tylko na prognozach do tej daty
 GRID = (0.55, 0.58, 0.60, 0.65)
 MIN_AUC = 0.52
+MIN_TSTAT = 1.65          # jednostronny test 5%: średni dzienny zwrot strategii > 0
 
 
 def make_model(seed: int = 0) -> HistGradientBoostingClassifier:
@@ -77,10 +78,12 @@ def metrics(p_up: pd.Series, y: pd.Series, ret_1_fwd: pd.Series, cost: pd.Series
     dd = float((eq / eq.cummax() - 1).min())
     std = float(sr.std())
     sharpe = float(sr.mean() / std * np.sqrt(252)) if std > 0 else 0.0
+    tstat = float(sr.mean() / std * np.sqrt(len(sr))) if std > 0 else 0.0
     pos = positions(p, thr)
     return {
         "n": int(len(p)), "accuracy": round(acc, 4), "auc": round(auc, 4),
         "return_%": round(100 * float(np.exp(sr.sum()) - 1), 2), "sharpe": round(sharpe, 3),
+        "tstat": round(tstat, 2),
         "max_dd_%": round(100 * dd, 2), "flips": int(pos.diff().abs().fillna(pos.abs()).gt(0).sum()),
         "days_long_%": round(100 * float((pos > 0).mean()), 1),
         "days_short_%": round(100 * float((pos < 0).mean()), 1),
@@ -105,16 +108,37 @@ def choose_threshold(p_up: pd.Series, feat: pd.DataFrame, split: str = SPLIT_DAT
     return float(best)
 
 
-def edge_verdict(oos: dict) -> tuple[bool, str]:
-    if oos.get("n", 0) < 250:
-        return False, f"Za mało prognoz poza próbą ({oos.get('n', 0)}), żeby ocenić przewagę."
-    auc, sh, ret = oos["auc"], oos["sharpe"], oos["return_%"]
-    ok = (auc > MIN_AUC) and sh > 0 and ret > 0
-    txt = (f"okres kontrolny {oos['from']}..{oos['to']}: AUC {auc:.3f}, Sharpe {sh:.2f}, "
-           f"zwrot {ret:+.1f}% (kup i trzymaj {oos['bh_return_%']:+.1f}%), obsunięcie {oos['max_dd_%']:.1f}%")
+def _period_ok(m: dict) -> bool:
+    return m.get("n", 0) >= 250 and m["auc"] > MIN_AUC and m["sharpe"] > 0 and m["return_%"] > 0
+
+
+def _period_txt(name: str, m: dict) -> str:
+    if m.get("n", 0) < 250:
+        return f"{name}: za mało prognoz ({m.get('n', 0)})"
+    return (f"{name} {m['from']}..{m['to']}: AUC {m['auc']:.3f}, Sharpe {m['sharpe']:.2f}, t {m['tstat']:.2f}, "
+            f"zwrot {m['return_%']:+.1f}% (kup i trzymaj {m['bh_return_%']:+.1f}%), obsunięcie {m['max_dd_%']:.1f}%")
+
+
+def edge_verdict(ins: dict, oos: dict) -> tuple[bool, str]:
+    """Przewaga tylko, gdy jest w OBU okresach (strojenia i kontrolnym) i jest istotna statystycznie
+    w okresie kontrolnym. Dobry wynik w jednym okresie to za mało: może być hossą, nie umiejętnością."""
+    ok = _period_ok(ins) and _period_ok(oos) and oos.get("tstat", 0) > MIN_TSTAT
+    txt = _period_txt("okres strojenia", ins) + "; " + _period_txt("okres kontrolny", oos)
     if ok:
         return True, "Model ma przewagę poza próbą; " + txt
     return False, "Model nie ma udowodnionej przewagi poza próbą; " + txt
+
+
+def regime_baseline(feat: pd.DataFrame, ins) -> tuple[dict, dict]:
+    """Punkt odniesienia bez ML: długa gdy suma składników reżimu >= 2, krótka gdy <= -2 (jak regime.py)."""
+    total = feat[["reg_trend", "reg_dollar", "reg_yields"]].sum(axis=1, min_count=3)
+    pseudo = pd.Series(0.5, index=feat.index)
+    pseudo[total >= 2] = 1.0
+    pseudo[total <= -2] = 0.0
+    r1 = _ret_1_fwd(feat)
+    pseudo = pseudo.where(feat["reg_trend"].notna())
+    return (metrics(pseudo[ins], feat["y"][ins], r1[ins], feat["cost"][ins], 0.75),
+            metrics(pseudo[~ins], feat["y"][~ins], r1[~ins], feat["cost"][~ins], 0.75))
 
 
 def by_year(p_up: pd.Series, feat: pd.DataFrame, thr: float) -> dict:
@@ -134,8 +158,9 @@ def evaluate(feat: pd.DataFrame, split: str = SPLIT_DATE) -> tuple[dict, pd.Seri
     ins = p_up.index <= pd.Timestamp(split, tz="UTC")
     rep_in = metrics(p_up[ins], feat["y"][ins], r1[ins], feat["cost"][ins], thr)
     rep_out = metrics(p_up[~ins], feat["y"][~ins], r1[~ins], feat["cost"][~ins], thr)
-    has_edge, text = edge_verdict(rep_out)
-    report = {"trained_at": datetime.now(timezone.utc).isoformat(timespec="seconds"),
+    has_edge, text = edge_verdict(rep_in, rep_out)
+    base_in, base_out = regime_baseline(feat, ins)
+    report = {"regime_baseline": {"in_sample": base_in, "out_of_sample": base_out},"trained_at": datetime.now(timezone.utc).isoformat(timespec="seconds"),
               "rows": int(len(feat)), "data_from": str(feat.index[0].date()), "data_to": str(feat.index[-1].date()),
               "split": split, "threshold": thr, "horizon": HORIZON, "features": FEATURES,
               "in_sample": rep_in, "out_of_sample": rep_out, "by_year": by_year(p_up, feat, thr),
