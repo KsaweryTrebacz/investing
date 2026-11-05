@@ -17,6 +17,14 @@ MODE = "trend_d1"
 RESEARCH_NOTE = ("Badanie 2008-2024 (docs/research, pkt 10): przy docelowej zmienności 50% kapitał x3,46 przy "
                  "finansowaniu -5%, największy spadek -86%; cel 30%: x3,23, spadek -65%. Sam filtr momentum nie jest "
                  "istotny statystycznie, wynik zależy od trwania trendu wzrostowego złota.")
+RESEARCH_NOTE_LONG_SHORT = ("Badanie 2005-2025 (docs/research, pkt 12): wersja LONG i SHORT przy celu 50% i finansowaniu "
+                            "-5%/-1% dała x1,9 zamiast x10,7 dla samego LONG (największy spadek -89%); pozycje SHORT "
+                            "straciły łącznie 83%. Żadna testowana reguła SHORT nie poprawiła wyniku poza próbą.")
+
+
+def research_note(p: "TrendParams") -> str:
+    """Wynik badań dla wersji strategii z konfiguracji (tylko LONG albo LONG i SHORT)."""
+    return RESEARCH_NOTE if p.long_only else RESEARCH_NOTE_LONG_SHORT
 
 
 @dataclass

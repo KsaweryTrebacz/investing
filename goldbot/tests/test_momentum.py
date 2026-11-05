@@ -114,3 +114,19 @@ def test_trend_cycle_blocks_without_free_margin():
     others = {"positions": [{"instrument": "SPX500_USD", "side": "LONG", "units": 80, "entry": 5000.0}]}  # depozyt 73 000 PLN
     v = run(positions=others, config=c)
     assert v["decision"] == "BRAK_TRANSAKCJI" and "wolnego depozytu" in v["decision_reasons"][0]
+
+
+def test_long_short_mode_opens_short_and_reports_its_research():
+    m15 = FULL
+    d1 = D1_ALL.iloc[:-1]                                     # ostatni dzień demo jest niepełny
+    c = cfg()
+    c.instruments["XAU_USD"].trend = {"long_only": False}
+    v = run_cycle(m15, d1, *demo_macro(d1), Store(), now=m15["time"].iloc[-1] + pd.Timedelta(minutes=16),
+                  ctx=Context(cfg=c, positions={"positions": []}))["verdict"]
+    r = v["report"]
+    assert r["trend"]["momentum"] < 0 and v["action"] == "OTWÓRZ SHORT" and v["verdict"] == "SPRZEDAJ"
+    assert r["plan"]["target_units"] < 0 and r["pnl"]["liquidation_price"] > r["plan"]["price"]
+    assert "LONG i SHORT" in render_text(r) and "pkt 12" in render_text(r)
+    long_only = run_cycle(m15, d1, *demo_macro(d1), Store(), now=m15["time"].iloc[-1] + pd.Timedelta(minutes=16),
+                          ctx=Context(cfg=cfg(), positions={"positions": []}))["verdict"]
+    assert long_only["action"] == "BEZ POZYCJI"

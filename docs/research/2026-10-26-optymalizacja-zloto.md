@@ -1,7 +1,7 @@
 # Optymalizacja i testy skuteczności na publicznych danych złota
 
-Data: 2026-10-26. Wyniki surowe: `docs/research/wyniki/` (study.json, trend.json, edges.json, leverage.json, sizing.json, paper_trend.json, grid_full_period.csv.gz).
-Kod: `goldbot/research/` (datasets.py, study.py, trend.py, edges.py, leverage.py, sizing.py, paper_trend.py, download.sh).
+Data: 2026-10-26. Wyniki surowe: `docs/research/wyniki/` (study.json, trend.json, edges.json, leverage.json, sizing.json, paper_trend.json, longshort.json, grid_full_period.csv.gz).
+Kod: `goldbot/research/` (datasets.py, study.py, trend.py, edges.py, leverage.py, sizing.py, paper_trend.py, longshort.py, download.sh).
 
 ## Wniosek
 
@@ -204,6 +204,36 @@ Cel 50%, finansowanie −5%, wynik roczny: 2005 +21%, 2006 0%, 2007 +67%, 2008 �
 - Kontrola: na latach 2008–2024 symulacja według rad daje ×3,17 wobec ×3,46 w punkcie 10. Różnica wynika z wykonania na otwarciu następnego dnia, progu 10% i zaokrąglania do uncji.
 - Prawdziwy cykl programu (`run_cycle` w trybie `trend_d1`, raport i decyzja) uruchomiony dzień po dniu na ostatnich 150 dniach danych, z plikiem pozycji aktualizowanym według rad, zgadza się z symulacją w 99% dni co do akcji i wielkości pozycji. Na tym odcinku (21.08.2024 – 21.03.2025) rachunek urósł z 20 000 do 37 189 USD.
 
+### 12. Strategia trendowa z pozycjami LONG i SHORT (research/longshort.py)
+
+Ta sama symulacja co w punkcie 11, ale z `long_only: false`: przy ujemnym momentum 120 dni pozycja SHORT z tą samą dźwignią. Start 20 000 USD, lata 2005–2025.
+
+| Wariant | Tylko LONG | LONG i SHORT | Wynik samych dni SHORT |
+|---|---|---|---|
+| Cel 50%, finansowanie LONG −5%, SHORT −1% | 213 366 USD (×10,7), spadek −88% | **37 755 USD (×1,9)**, spadek −89% | −83% |
+| Cel 30%, finansowanie −5% / −1% | 132 450 USD (×6,6) | 59 947 USD (×3,0) | −55% |
+| Cel 50%, finansowanie −2,5% / 0% | 715 275 USD (×35,8) | 164 701 USD (×8,2) | −78% |
+| Cel 30%, finansowanie −2,5% / 0% | 283 189 USD (×14,2) | 142 946 USD (×7,1) | −51% |
+
+Pozycja SHORT była otwarta przez 32% dni. Zarabiała w latach bessy (2013: +118% zamiast −16%, 2015: +55% zamiast −1%), ale w pozostałych latach traciła na odbiciach. Strategia odwracała pozycję 172 razy.
+
+Reguły wejścia na SHORT (cel 50%, przeliczanie codzienne; wybór na 2005–2014, test na 2015–2025):
+
+| Reguła SHORT | 2005–2014 | 2015–2025 | 2005–2025 |
+|---|---|---|---|
+| Bez SHORT (tylko LONG) | ×3,66 | ×3,28 | ×12,0 |
+| Momentum 120 dni < 0 | ×1,63 | ×1,34 | ×2,2 |
+| Momentum 120 dni < 0, SHORT z połową dźwigni | ×2,77 | ×2,39 | ×6,6 |
+| Momentum 250 dni < 0 | ×4,05 | ×1,29 | ×5,2 |
+| Momentum 250 dni < 0, połowa dźwigni (wybrana na 2005–2014) | ×4,17 | **×2,24** | ×9,3 |
+| Momentum 120 dni < 0 i cena < średnia 200 dni | ×3,14 | ×0,73 | ×2,3 |
+| Momentum 120 dni < −5% | ×2,07 | ×1,90 | ×3,9 |
+| Momentum 120 dni < −10% | ×1,27 | ×1,85 | ×2,3 |
+
+Finansowanie −5% / −1%; przy −2,5% / 0% kolejność jest ta sama (wybrana reguła: test ×2,84 wobec ×6,57 dla samego LONG).
+
+Jedyne reguły lepsze od samego LONG na latach doboru (momentum 250 dni) przegrywają z nim na latach testowych. Na całym okresie każdy wariant z SHORT daje mniej niż sam LONG. W danych 2005–2025 pozycje krótkie w tej strategii obniżają wynik. Program obsługuje je (`"long_only": false`), a raport podaje wtedy te wyniki.
+
 ## Zmiany w programie
 
 - `strategy_validated` w konfiguracji instrumentu (domyślnie `false`): sygnał M15 daje najwyżej „obserwację”, a plan jest pokazany jako wstrzymany, z odnośnikiem do tego raportu. Zmienić na `true` można dopiero, gdy `python main.py validate` na danych Twojego brokera da dodatni wynik na okresie kontrolnym po kosztach i przy rozsądnej liczbie transakcji.
@@ -230,6 +260,7 @@ python -m research.edges --broker ../dane/XAU_15m_data.csv --dukascopy ../dane/d
 python -m research.leverage --broker ../dane/XAU_15m_data.csv --dukascopy ../dane/dukascopy_m15 --out ../wyniki
 python -m research.sizing --broker ../dane/XAU_15m_data.csv --dukascopy ../dane/dukascopy_m15 --out ../wyniki
 python -m research.paper_trend --broker ../dane/XAU_15m_data.csv --dukascopy ../dane/dukascopy_m15 --out ../wyniki
+python -m research.longshort --broker ../dane/XAU_15m_data.csv --dukascopy ../dane/dukascopy_m15 --out ../wyniki
 ```
 
 Pełna siatka liczy się 10–15 minut na 4 rdzeniach.

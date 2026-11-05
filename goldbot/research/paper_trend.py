@@ -33,7 +33,7 @@ def paper_trade(d1: pd.DataFrame, p: TrendParams, start: str, capital: float = 2
     idx = day.index
     i0 = max(int(np.searchsorted(idx.values, np.datetime64(start))), p.lookback + p.vol_window)
     i1 = len(day) if end is None else int(np.searchsorted(idx.values, np.datetime64(end)))
-    eq, units, curve, log = capital, 0.0, [], []
+    eq, units, curve, log, held = capital, 0.0, [], [], []
     for t in range(i0, i1):
         # 1) rada z zamknięcia dnia t-1, wykonanie na otwarciu dnia t
         adv = advise(int(pos[t - 1]), float(lev[t - 1]), eq, c[t - 1], 1.0, step, units, p.rebalance_band)
@@ -49,6 +49,7 @@ def paper_trade(d1: pd.DataFrame, p: TrendParams, start: str, capital: float = 2
         else:
             ref = c[t - 1]
         # 2) likwidacja przez brokera w ciągu dnia
+        held.append(int(np.sign(units)))
         if units:
             side, u = (1, units) if units > 0 else (-1, -units)
             if side == 1:
@@ -70,7 +71,9 @@ def paper_trade(d1: pd.DataFrame, p: TrendParams, start: str, capital: float = 2
             eq += units * (c[t] - ref) + u * c[t] * rate / 365 * (3 if idx[t].weekday() == 2 else 1)
             eq = max(eq, 0.0)
         curve.append(eq)
-    return pd.Series(curve, index=idx[i0:i1]), pd.DataFrame(log)
+    out = pd.Series(curve, index=idx[i0:i1])
+    out.attrs["side"] = np.array(held)  # kierunek pozycji w ciągu każdego dnia (do podziału wyniku LONG/SHORT)
+    return out, pd.DataFrame(log)
 
 
 def summarize(curve: pd.Series, log: pd.DataFrame, capital: float) -> dict:

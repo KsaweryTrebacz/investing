@@ -11,7 +11,7 @@ from costs import holding_estimate
 from decision import finalize, finalize_trend
 from events import HIGH, applies, dividend_in, near_now, upcoming
 from guards import apply_guards, validate_candles
-from momentum import MODE, RESEARCH_NOTE, TrendParams, advise, current_units, recent_backtest, signal
+from momentum import MODE, TrendParams, advise, current_units, recent_backtest, research_note, signal
 from notify import format_message, should_notify, should_store
 from pipeline import prepare
 from regime import REGIME_BUY, REGIME_NEUTRAL, REGIME_SELL
@@ -171,7 +171,7 @@ def run_trend_cycle(m15, d1, usd, yld, store, send, now, ctx: Context) -> dict:
     window = upcoming(mine, now, EXPIRE_HOURS, ctx.instrument, instr.symbol)
     rates = (instr.costs.financing_long_rate, instr.costs.financing_short_rate)
     hist_fin = (rates[0] if rates[0] is not None else -0.05, rates[1] if rates[1] is not None else -0.01)
-    history = {"research": RESEARCH_NOTE,
+    history = {"research": research_note(tp),
                "recent": recent_backtest(d1, tp, instr.costs.margin_rate or 0.02, cfg.account.margin_closeout, *hist_fin)}
     v["report"] = build_trend_report(instrument=ctx.instrument, v=v, sig=sig, adv=adv, plan=plan, facts=facts,
                                      rows=rows, window=window, news=ctx.news, errors=ctx.errors, meta=ctx.meta,

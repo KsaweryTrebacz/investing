@@ -257,6 +257,8 @@ def build_trend_report(*, instrument: str, v: dict, sig: dict, adv: dict | None,
     rate = instr.costs.financing_long_rate if side >= 0 else instr.costs.financing_short_rate
     inval = ([f"Zamknięcie D1 poniżej {sig['lookback_close']:.2f} (cena sprzed {sig['lookback']} dni): momentum spada "
               "do zera, pozycja do zamknięcia." if side == 1 else
+              f"Zamknięcie D1 powyżej {sig['lookback_close']:.2f}: momentum dodatnie, pozycja SHORT do odwrócenia na LONG."
+              if side == -1 else
               f"Zamknięcie D1 powyżej {sig['lookback_close']:.2f}: momentum dodatnie, strategia otworzy LONG."]
              + ["Wzrost zmienności obniża dźwignię docelową: pozycja do zmniejszenia przy kolejnym przeliczeniu."]
              + ([f"Cena {plan['liquidation_price']:.2f}: likwidacja przez brokera (strategia nie ma stopu)."]
